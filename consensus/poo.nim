@@ -1,0 +1,2 @@
+proc poo*() =
+  echo "poop"

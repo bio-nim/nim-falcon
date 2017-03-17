@@ -68,7 +68,7 @@ common.usePtr[char]()
 
 # Was used by sort. Still used by bsearch.
 proc compare_d_path*(arg1, arg2: d_path_data2): int =
-  #log("Comparing:", repr(arg1), " to ", repr(arg2))
+  log("Comparing:", repr(arg1), " to ", repr(arg2))
   if arg1.d == arg2.d:
     if arg1.k == arg2.k:
       result = 0
@@ -76,7 +76,7 @@ proc compare_d_path*(arg1, arg2: d_path_data2): int =
       result = if arg1.k < arg2.k: -1 else: 1
   else:
     result = if arg1.d < arg2.d: -1 else: 1
-  #log("result=", $result)
+  log("result=", $result)
 
 proc d_path_data2sort*(data: pointer; max_idx: ByteAddress, size: ByteAddress) {.
     cdecl, importc: "d_path_data2sort", header: "data_sorter.h".}
@@ -84,7 +84,7 @@ proc d_path_data2sort*(data: pointer; max_idx: ByteAddress, size: ByteAddress) {
 proc d_path_sort*(path_base: var seq[d_path_data2], max_idx: int32) =
   if max_idx == 1:
     return
-  #log("sort:", $len(path_base), " max_idx:", $max_idx)
+  log("sort:", $len(path_base), " max_idx:", $max_idx)
   #path_base.sort(compare_d_path)
   d_path_data2sort(pointer(addr path_base[0]), ByteAddress(max_idx), ByteAddress(sizeof(d_path_data2)));
   #void d_path_sort( d_path_data2 * base, unsigned long max_idx)
@@ -93,7 +93,7 @@ proc d_path_sort*(path_base: var seq[d_path_data2], max_idx: int32) =
 # Copied from Nim/lib/pure/algorithm.nim, and added cmp proc,
 # and max_idx.
 proc binarySearch*[T](a: openArray[T], length: int, key: T, cmp: proc (x, y: T): int {.closure.}): int =
-  #log("length:", $length, ", key:", $key)
+  log("length:", $length, ", key:", $key)
   ## binary search for `key` in `a`. Returns -1 if not found.
   var b = length # must be <= len(a)
   result = 0
@@ -109,17 +109,17 @@ proc get_dpath_idx(d: seq_coor_t; k: seq_coor_t; max_idx: int; # culong?
   var d_tmp: d_path_data2
   d_tmp.d = d
   d_tmp.k = k
-  #log("d_tmp:", repr(d_tmp), ", len(path_base)=", $len(path_base), ", max_idx=", $max_idx)
-  #log(repr(path_base[0]))
-  #log(repr(path_base[1]))
+  log("d_tmp:", repr(d_tmp), ", len(path_base)=", $len(path_base), ", max_idx=", $max_idx)
+  #log("path_base[0]:", repr(path_base[0]))
+  #log("path_base[1]:", repr(path_base[1]))
   #log(repr(path_base[2236]))
   #log("...")
   var found = binarySearch(path_base, max_idx, d_tmp, compare_d_path)
-  #log("found:", $found)
+  log("found:", $found)
   if found == -1:
     raise newException(ValueError, "Could not find d,k in path_base") # TODO(CD): encode key into msg
   rtn = path_base[found]
-  #log("dp ", $repr(rtn))
+  log("dp ", $repr(rtn))
   ## #printf("dp %ld %ld %ld %ld %ld %ld %ld\n", (rtn)->d, (rtn)->k, (rtn)->x1, (rtn)->y1, (rtn)->x2, (rtn)->y2, (rtn)->pre_k);
   return rtn
 
@@ -252,7 +252,7 @@ proc new_x_and_y(x0, y0, q_len, t_len: seq_coor_t, query_seq, target_seq: ptr ch
       return (x, y)
 proc align*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
            t_len: seq_coor_t; band_tolerance: seq_coor_t; get_aln_str: bool): ref alignment =
-  #log("In align...")
+  log("In align...")
   var V: seq[seq_coor_t]
   var U: seq[seq_coor_t]
   ## # array of matched bases for each "k"
@@ -287,11 +287,11 @@ proc align*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
   k_offset = max_d
   ## # We should probably use hashmap to store the backtracing information to save memory allocation time
   ## # This O(MN) block allocation scheme is convient for now but it is slower for very long sequences
-  #let ssize = max_d * (band_size + 1) * 2 + 1
+  let ssize = max_d * (band_size + 1) * 2 + 1
   #if ssize > 1000000:
   #  raise newException(ValueError, "too big") # Just to catch bugs during development.
 
-  #log("Big seq:", $ssize)
+  log("Big seq:", $ssize)
   mem(d_path, max_d, band_size)
   align_rtn = mem2(aln_path, q_len, t_len)
   ## #fprintf(stderr, "UV sz aln sz2: %d %d %d %d\n", (max_d * 2 + 1), sizeof(seq_coor_t), (q_len + t_len + 1), sizeof(d_path_data2));
@@ -357,7 +357,7 @@ proc align*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
       break
     inc(d)
   #free(aln_path)
-  #log("Leaving align")
+  log("Leaving align")
   return align_rtn
 
 #proc free_alignment*(aln: ptr alignment) =

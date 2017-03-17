@@ -338,12 +338,7 @@ proc clean_msa_working_space*(msa_array: ref msa_pos_t; max_t_len: int) =
       """
     inc(i)
 
-#const
-#  STATIC_ALLOCATE* = true
-
-when defined(STATIC_ALLOCATE):
-  log("STATIC_ALLOCATE")
-  var msa_array {.threadvar.}: ref msa_pos_t
+var msa_array {.threadvar.}: ref msa_pos_t
 
 
 proc get_cns_from_align_tags*(tag_seqs: seq[ref align_tags_t]; n_tag_seqs: seq_coor_t;
@@ -359,22 +354,15 @@ proc get_cns_from_align_tags*(tag_seqs: seq[ref align_tags_t]; n_tag_seqs: seq_c
   var c_tag: ptr align_tag_t
   newSeq(coverage, t_len)
   newSeq(local_nbase, t_len)
-  when not defined(STATIC_ALLOCATE):
-    log("no static_ALLOCATE")
-    var msa_array: ref msa_pos_t
-    new(msa_array)
-    #msa_array = calloc[msa_pos_t](t_len)
-    newSeq(msa_array[], t_len)
-    i = 0
-    while i < t_len:
-      #msa_array[i] = calloc[msa_delta_group_t](1)
-      msa_array[i].size = 8
-      allocate_delta_group(addr msa_array[i], 8)
-      inc(i)
-  else:
+
+  block:
+    # Ensure msa_array exists.
     assert(t_len < 100000)
     if msa_array == nil:
       msa_array = get_msa_working_sapce(100000)
+  defer:
+    clean_msa_working_space(msa_array, (t_len + 1))
+
   ## # loop through every alignment
   i = 0
   while i < n_tag_seqs:
@@ -570,15 +558,6 @@ proc get_cns_from_align_tags*(tag_seqs: seq[ref align_tags_t]; n_tag_seqs: seq_c
     inc(i)
   cns_int[index] = 0
   ## #printf("%s\n", cns_str);
-  when not defined(STATIC_ALLOCATE):
-    i = 0
-    while i < t_len:
-      free_delta_group(msa_array[i])
-      dealloc(msa_array[i])
-      inc(i)
-    dealloc(msa_array)
-  else:
-    clean_msa_working_space(msa_array, (t_len + 1))
   return consensus
 
 ## #const unsigned int K = 8;

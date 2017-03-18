@@ -225,7 +225,7 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
     #sync() # Let extra threads shutdown.
     discard
   let config: Config = (
-    min_cov: 1, # min_cov
+    min_cov: min_cov,
     K: 8, # not cli
     max_n_read: max_n_read,
     min_idt: float32(strutils.parseFloat(min_idt)),

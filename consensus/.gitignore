@@ -1,3 +1,4 @@
-/nimcache/
+nimcache/
 *.exe
 t/
+main.nim.cfg

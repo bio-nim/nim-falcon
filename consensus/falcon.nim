@@ -348,12 +348,10 @@ proc get_cns_from_align_tags*(tag_seqs: seq[ref align_tags_t]; n_tag_seqs: seq_c
     j: seq_coor_t
   var t_pos: seq_coor_t = 0
   var coverage: seq[int]
-  var local_nbase: seq[uint8]
   var consensus: ref consensus_data
   ## #char * consensus;
   var c_tag: ptr align_tag_t
   newSeq(coverage, t_len)
-  newSeq(local_nbase, t_len)
 
   block:
     # Ensure msa_array exists.
@@ -399,7 +397,6 @@ proc get_cns_from_align_tags*(tag_seqs: seq[ref align_tags_t]; n_tag_seqs: seq_c
       #log("repr(msa_array[t_pos].delta[delta].base)@", $base, "=", $repr(msa_array[t_pos].delta[delta.int].base))
       update_col(addr((msa_array[t_pos].delta[delta.int].base[base])), c_tag.p_t_pos,
                  c_tag.p_delta, c_tag.p_q_base)
-      inc(local_nbase[t_pos])
       inc(j)
     inc(i)
   ## # propogate score throught the alignment links, setup backtracking information

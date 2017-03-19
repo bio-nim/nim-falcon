@@ -1,3 +1,6 @@
 [submodule "consensus/cligen"]
 	path = consensus/cligen
 	url = git@github.com:pb-cdunn/cligen.git
+[submodule "falcon-data"]
+	path = falcon-data
+	url = git@github.com:pb-cdunn/falcon-data

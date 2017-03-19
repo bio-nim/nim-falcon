@@ -17,8 +17,7 @@ from strutils import `strip`, `split`
 from strutils import `%`, `formatFloat`, `ffdecimal`
 
 
-let good_regions = re"[ACGT]+"
-#var thread_msa_array {.threadvar.}: string
+var good_regions {.threadvar.}: Regex
 
 proc get_longest_reads(seqs: seq[string], max_n_read, max_cov_aln: int): seq[string] =
     var longest_n_reads = max_n_read
@@ -112,7 +111,6 @@ type ConsensusArgs = tuple
   inseqs: seq[string]
   seed_id: string
   config: Config
-  good_regions: Regex
 type ConsensusResult = tuple
   consensus: string
   seed_id: string
@@ -188,8 +186,9 @@ proc process_consensus(cargs: ConsensusArgs) {.thread} =
         echo ">"&seed_id&"_f"
         echo consensus
         return
-    var cns = findall_patt(consensus, cargs.good_regions)
-    #var cns = findall_patt(consensus, good_regions)
+    if good_regions.isNil:
+      good_regions = re"[ACGT]+"
+    var cns = findall_patt(consensus, good_regions)
     if len(cns) == 0:
         return
     if true: #args.output_multi:
@@ -236,7 +235,7 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
   for q in get_seq_data(config, min_n_read, min_len_aln):
     var (seqs, seed_id, config_same) = q
     #log("len(seqs)=", $(len(seqs), ", seed_id=", seed_id, "config=", config))
-    var cargs: ConsensusArgs = (inseqs: seqs, seed_id: seed_id, config: config, good_regions: good_regions)
+    var cargs: ConsensusArgs = (inseqs: seqs, seed_id: seed_id, config: config)
     if n_core == 0:
       #common.benchmark "loop":
         process_consensus(cargs)

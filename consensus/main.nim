@@ -240,7 +240,7 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
       #common.benchmark "loop":
         process_consensus(cargs)
     else:
-      spawnX process_consensus(cargs)
+      spawn process_consensus(cargs)
       #spawn os.sleep(1000)
       #spawn simple(cargs)
   sync()

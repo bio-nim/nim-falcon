@@ -1,6 +1,7 @@
-NIMFLAGS=-d:debug --debugger:native
-NIMFLAGS=-d:release
+NIMFLAGS+=--threads:on --threadAnalysis:off
 NIMFLAGS+=--verbosity:2
+#NIMFLAGS+=-d:debug
+NIMFLAGS+=-d:release
 
 do: main.exe
 	make -C t # LA4Falcon | ./n.exe

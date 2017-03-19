@@ -75,9 +75,7 @@ type
     p_q_base*: char            ## # the previous base
     q_id*: uint32
 
-  align_tags_t* = object
-    length*: seq_coor_t
-    align_tags*: ptr align_tag_t
+  align_tags_t* = seq[align_tag_t]
 
   align_tag_col_t* = object
     size*: uint16
@@ -108,7 +106,7 @@ type
   msa_pos_t* = seq[msa_delta_group_t]
 
 common.usePtr[align_tag_t]
-common.usePtr[ptr align_tags_t]
+common.usePtr[align_tags_t]
 common.usePtr[align_tag_col_t]
 common.usePtr[msa_pos_t]
 common.usePtr[msa_base_group_t]
@@ -131,8 +129,7 @@ proc get_align_tags*(aln_q_seq: cstring; aln_t_seq: cstring; aln_seq_len: seq_co
     p_j: seq_coor_t
     p_jj: seq_coor_t
   new(tags)
-  tags.length = aln_seq_len
-  tags.align_tags = calloc[align_tag_t](aln_seq_len + 1)
+  newSeq(tags[], aln_seq_len)
   i = srange.s1 - 1
   j = srange.s2 - 1
   jj = 0
@@ -148,28 +145,23 @@ proc get_align_tags*(aln_q_seq: cstring; aln_t_seq: cstring; aln_seq_len: seq_co
       inc(j)
       jj = 0
     if j + t_offset >= 0 and jj < UINT8_MAX and p_jj < UINT8_MAX:
-      (tags.align_tags[k]).t_pos = j + t_offset
-      (tags.align_tags[k]).delta = uint8(jj)
-      (tags.align_tags[k]).p_t_pos = p_j + t_offset
-      (tags.align_tags[k]).p_delta = uint8(p_jj)
-      (tags.align_tags[k]).p_q_base = p_q_base
-      (tags.align_tags[k]).q_base = aln_q_seq[k]
-      (tags.align_tags[k]).q_id = q_id
+      (tags[k]).t_pos = j + t_offset
+      (tags[k]).delta = uint8(jj)
+      (tags[k]).p_t_pos = p_j + t_offset
+      (tags[k]).p_delta = uint8(p_jj)
+      (tags[k]).p_q_base = p_q_base
+      (tags[k]).q_base = aln_q_seq[k]
+      (tags[k]).q_id = q_id
       p_j = j
       p_jj = jj
       p_q_base = aln_q_seq[k]
     inc(k)
-  ## # sentinal at the end
-  ## #k = aln_seq_len;
-  tags.length = k
-  (tags.align_tags[k]).t_pos = -1 #UINT_MAX
-  (tags.align_tags[k]).delta = UINT8_MAX
-  (tags.align_tags[k]).q_base = '.'
-  (tags.align_tags[k]).q_id = UINT_MAX
+  ## # sentinal at the end no longer needed
   return tags
 
 proc free_align_tags*(tags: ref align_tags_t) =
-  dealloc(tags.align_tags)
+  discard
+  #dealloc(tags.align_tags)
   #dealloc(tags)
 
 proc allocate_aln_col*(col: ptr align_tag_col_t) =
@@ -341,7 +333,7 @@ proc clean_msa_working_space*(msa_array: ref msa_pos_t; max_t_len: int) =
 var msa_array {.threadvar.}: ref msa_pos_t
 
 
-proc get_cns_from_align_tags*(tag_seqs: seq[ref align_tags_t]; n_tag_seqs: seq_coor_t;
+proc get_cns_from_align_tags*(tag_seqs: var seq[ref align_tags_t]; n_tag_seqs: seq_coor_t;
                              t_len: seq_coor_t; min_cov: int): ref consensus_data =
   var
     i: seq_coor_t
@@ -366,8 +358,8 @@ proc get_cns_from_align_tags*(tag_seqs: seq[ref align_tags_t]; n_tag_seqs: seq_c
   while i < n_tag_seqs:
     ## # for each alignment position, insert the alignment tag to msa_array
     j = 0
-    while j < tag_seqs[i].length:
-      c_tag = tag_seqs[i].align_tags + j
+    while j < tag_seqs[i][].len:
+      c_tag = (addr tag_seqs[i][j])
       var delta: uint8
       delta = c_tag.delta
       if delta == 0:

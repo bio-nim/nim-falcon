@@ -1,4 +1,4 @@
-NIMFLAGS+=--threads:on --threadAnalysis:off
+NIMFLAGS+=--threads:on #--threadAnalysis:off
 NIMFLAGS+=--verbosity:2
 #NIMFLAGS+=-d:debug
 NIMFLAGS+=-d:release

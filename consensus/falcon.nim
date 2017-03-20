@@ -351,7 +351,8 @@ proc get_cns_from_align_tags*(tag_seqs: var seq[ref align_tags_t]; n_tag_seqs: s
     if msa_array == nil:
       msa_array = get_msa_working_sapce(100000)
   defer:
-    clean_msa_working_space(msa_array, (t_len + 1))
+    msa_array = nil
+    #clean_msa_working_space(msa_array, (t_len + 1))
 
   ## # loop through every alignment
   i = 0

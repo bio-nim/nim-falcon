@@ -1,5 +1,5 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
-#import nimprof
+import nimprof
 
 from common import log
 from falcon import nil
@@ -243,6 +243,9 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
       spawn process_consensus(cargs)
       #spawn os.sleep(1000)
       #spawn simple(cargs)
+    log("tot=$1 occ=$2, free=$3 b4" % [$getTotalMem(), $getOccupiedMem(), $getFreeMem()])
+    GC_fullCollect()
+    log("tot=$1 occ=$2, free=$3 now" % [$getTotalMem(), $getOccupiedMem(), $getFreeMem()])
   sync()
   result = 0
 

@@ -17,7 +17,7 @@ from strutils import `strip`, `split`
 from strutils import `%`, `formatFloat`, `ffdecimal`
 
 
-var good_regions {.threadvar.}: Regex
+#var good_regions {.threadvar.}: Regex
 
 proc get_longest_reads(seqs: seq[string], max_n_read, max_cov_aln: int): seq[string] =
     var longest_n_reads = max_n_read
@@ -186,8 +186,10 @@ proc process_consensus(cargs: ConsensusArgs) {.thread} =
         echo ">"&seed_id&"_f"
         echo consensus
         return
+    var good_regions: Regex
     if good_regions.isNil:
       good_regions = re"[ACGT]+"
+      #log("good_regions isNil!!!")
     var cns = findall_patt(consensus, good_regions)
     if len(cns) == 0:
         return

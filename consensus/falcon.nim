@@ -108,8 +108,8 @@ type
 common.usePtr[align_tag_t]
 common.usePtr[align_tags_t]
 common.usePtr[align_tag_col_t]
-common.usePtr[msa_pos_t]
-common.usePtr[msa_base_group_t]
+#common.usePtr[msa_pos_t]
+#common.usePtr[msa_base_group_t]
 common.usePtr[seq_coor_t]
 common.usePtr[uint16]
 common.usePtr[uint8]
@@ -231,6 +231,7 @@ proc realloc_delta_group*(g: ptr msa_delta_group_t; new_size: int) =
       allocate_aln_col(addr((g.delta[i].base[j])))
       inc(j)
     inc(i)
+  assert(new_size <= 255)
   g.gsize= new_size.uint8
 
 proc free_delta_group*(g: ptr msa_delta_group_t) =
@@ -290,8 +291,8 @@ proc get_msa_working_sapce*(max_t_len: cuint): ref msa_pos_t =
   i = 0
   while i < max_t_len.int:
     #msa_array[i] = calloc[msa_delta_group_t](1)
-    msa_array[i].gsize = 8
-    allocate_delta_group(addr msa_array[i], 8)
+    msa_array[][i].gsize = 8
+    allocate_delta_group(addr msa_array[][i], 8)
     inc(i)
   return msa_array
 
@@ -303,7 +304,7 @@ proc clean_msa_working_space*(msa_array: ref msa_pos_t; max_t_len: int) =
     k: int #uint
   i = 0
   while i < max_t_len:
-    realloc_delta_group(addr msa_array[i], 0)
+    realloc_delta_group(addr msa_array[][i], 0)
     discard """
     j = 0
     while j < msa_array[i].delta.len
@@ -351,8 +352,8 @@ proc get_cns_from_align_tags*(tag_seqs: var seq[ref align_tags_t]; n_tag_seqs: s
     if msa_array == nil:
       msa_array = get_msa_working_sapce(100000)
   defer:
-    msa_array = nil
-    #clean_msa_working_space(msa_array, (t_len + 1))
+    #msa_array = nil
+    clean_msa_working_space(msa_array, (t_len + 1))
 
   ## # loop through every alignment
   i = 0
@@ -369,7 +370,7 @@ proc get_cns_from_align_tags*(tag_seqs: var seq[ref align_tags_t]; n_tag_seqs: s
       if msa_array[t_pos].delta.len <= delta.int:
         #msa_array[t_pos].max_delta = delta
         #if msa_array[t_pos].max_delta > msa_array[t_pos].delta.len.uint8:
-        realloc_delta_group(addr msa_array[t_pos], delta.int + 1)
+        realloc_delta_group(addr msa_array[][t_pos], delta.int + 1)
       var base: uint8
       case c_tag.q_base
       of 'A':

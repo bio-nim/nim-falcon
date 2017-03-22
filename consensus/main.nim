@@ -126,6 +126,7 @@ proc get_con(args: ConsensusArgs): ConsensusResult =
     var cseqs: cStringArray
     copy_seq_ptrs(cseqs, seqs)
     var consensus_data = falcon.generate_consensus(cseqs, n_seq, config.min_cov, config.K, config.min_idt)
+    deallocCStringArray(cseqs)
     #log("cr:", repr(consensus_data))
     var consensus = consensus_data.sequence
     #echo "cs:", addr(consensus_data.sequence), " ", addr consensus, " ", addr consensus_data.sequence[0], " ", addr consensus[0]

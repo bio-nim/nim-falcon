@@ -257,8 +257,8 @@ proc new_x_and_y(x0, y0, q_len, t_len: seq_coor_t, query_seq, target_seq: ptr ch
         inc(x)
         inc(y)
       return (x, y)
-proc align*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
-           t_len: seq_coor_t; band_tolerance: seq_coor_t; get_aln_str: bool): ref alignment =
+proc align1*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
+           t_len: seq_coor_t; band_tolerance: seq_coor_t; get_aln_str: bool, d_path: var seq[d_path_data2]): ref alignment =
   #log("In align...")
   var V: seq[seq_coor_t]
   var U: seq[seq_coor_t]
@@ -281,7 +281,7 @@ proc align*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
   var band_size: seq_coor_t
   var d_path_idx: int32 = 0
   var max_idx: int32 = 0
-  var d_path: seq[d_path_data2]
+  #var d_path: seq[d_path_data2]
   var aln_path: seq[path_point]
   var align_rtn: ref alignment
   var aligned: bool = false
@@ -362,6 +362,12 @@ proc align*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
   #free(aln_path)
   #log("Leaving align")
   return align_rtn
+
+proc align*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
+           t_len: seq_coor_t; band_tolerance: seq_coor_t; get_aln_str: bool): ref alignment =
+  var d_path: seq[d_path_data2]
+  newSeq(d_path, 0)
+  return align1(query_seq, q_len, target_seq, t_len, band_tolerance, get_aln_str, d_path)
 
 #proc free_alignment*(aln: ptr alignment) =
 #  free(aln.q_aln_str)

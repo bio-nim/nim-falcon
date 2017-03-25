@@ -137,6 +137,13 @@ proc print_d_path*(base: var seq[d_path_data2]; max_idx: int) =
 #
 
 proc mem(d_path: var seq[d_path_data2], max_d, band_size: seq_coor_t) =
+  ## # We should probably use hashmap to store the backtracing information to save memory allocation time
+  ## # This O(MN) block allocation scheme is convient for now but it is slower for very long sequences
+  let ssize = max_d * (band_size + 1) * 2 + 1
+  #if ssize > 1000000:
+  #  raise newException(ValueError, "too big") # Just to catch bugs during development.
+
+  log("Big seq:", $ssize)
   newSeq(d_path, (max_d * (band_size + 1) * 2 + 1)) # maybe drop +1?
   ## #fprintf(stderr, "calloc(%d x %d)\n", max_d * (band_size + 1 ) * 2 + 1, sizeof(d_path_data2));
 proc mem2(aln_path: var seq[path_point], q_len, t_len: seq_coor_t): ref alignment =
@@ -285,13 +292,6 @@ proc align*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
   newSeq(V, (max_d * 2 + 1))
   newSeq(U, (max_d * 2 + 1))
   k_offset = max_d
-  ## # We should probably use hashmap to store the backtracing information to save memory allocation time
-  ## # This O(MN) block allocation scheme is convient for now but it is slower for very long sequences
-  let ssize = max_d * (band_size + 1) * 2 + 1
-  #if ssize > 1000000:
-  #  raise newException(ValueError, "too big") # Just to catch bugs during development.
-
-  #log("Big seq:", $ssize)
   mem(d_path, max_d, band_size)
   align_rtn = mem2(aln_path, q_len, t_len)
   ## #fprintf(stderr, "UV sz aln sz2: %d %d %d %d\n", (max_d * 2 + 1), sizeof(seq_coor_t), (q_len + t_len + 1), sizeof(d_path_data2));

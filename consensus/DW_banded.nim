@@ -144,7 +144,8 @@ proc mem(d_path: var seq[d_path_data2], max_d, band_size: seq_coor_t) =
   #  raise newException(ValueError, "too big") # Just to catch bugs during development.
 
   #log("Big seq:", $ssize)
-  newSeq(d_path, (max_d * (band_size + 1) * 2 + 1)) # maybe drop +1?
+  #newSeq(d_path, (max_d * (band_size + 1) * 2 + 1)) # maybe drop +1?
+  d_path.setLen(ssize)
   ## #fprintf(stderr, "calloc(%d x %d)\n", max_d * (band_size + 1 ) * 2 + 1, sizeof(d_path_data2));
 proc mem2(aln_path: var seq[path_point], q_len, t_len: seq_coor_t): ref alignment =
   var align_rtn: ref alignment

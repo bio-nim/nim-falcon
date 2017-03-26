@@ -147,19 +147,21 @@ proc mem(d_path: var seq[d_path_data2], max_d, band_size: seq_coor_t) =
   #newSeq(d_path, (max_d * (band_size + 1) * 2 + 1)) # maybe drop +1?
   d_path.setLen(ssize)
   ## #fprintf(stderr, "calloc(%d x %d)\n", max_d * (band_size + 1 ) * 2 + 1, sizeof(d_path_data2));
-proc mem2(aln_path: var seq[path_point], q_len, t_len: seq_coor_t): ref alignment =
-  var align_rtn: ref alignment
-  newSeq(aln_path, (q_len + t_len + 1))
-  new(align_rtn)
-  align_rtn.t_aln_str = newString(q_len + t_len + 1)
-  align_rtn.q_aln_str = newString(q_len + t_len + 1)
+proc mem2(aln_path: var seq[path_point], q_len, t_len: seq_coor_t, align_rtn: var alignment) =
+  #var align_rtn: ref alignment
+  #newSeq(aln_path, (q_len + t_len + 1))
+  #new(align_rtn)
+  aln_path.setLen(q_len + t_len + 1)
+  let slen = q_len + t_len + 1
+  align_rtn.t_aln_str.setLen(slen) # = newString(q_len + t_len + 1)
+  align_rtn.q_aln_str.setLen(slen) # = newString(q_len + t_len + 1)
   align_rtn.aln_str_size = 0
   align_rtn.aln_q_s = 0
   align_rtn.aln_q_e = 0
   align_rtn.aln_t_s = 0
   align_rtn.aln_t_e = 0
-  align_rtn
-proc do_get_aln_str(d, k, q_len, t_len: seq_coor_t, max_idx: int32, target_seq, query_seq: ptr char, d_path: var seq[d_path_data2], aln_path: var seq[path_point], align_rtn: ref alignment) =
+  # return align_rtn
+proc do_get_aln_str(d, k, q_len, t_len: seq_coor_t, max_idx: int32, target_seq, query_seq: ptr char, d_path: var seq[d_path_data2], aln_path: var seq[path_point], align_rtn: var alignment) =
         var cd: seq_coor_t
         var ck: seq_coor_t
         var aln_path_idx: seq_coor_t
@@ -259,7 +261,8 @@ proc new_x_and_y(x0, y0, q_len, t_len: seq_coor_t, query_seq, target_seq: ptr ch
         inc(y)
       return (x, y)
 proc align1*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
-           t_len: seq_coor_t; band_tolerance: seq_coor_t; get_aln_str: bool, d_path: var seq[d_path_data2]): ref alignment =
+           t_len: seq_coor_t; band_tolerance: seq_coor_t; get_aln_str: bool,
+           d_path: var seq[d_path_data2], aln_path: var seq[path_point], align_rtn: var alignment) =
   #log("In align...")
   var V: seq[seq_coor_t]
   var U: seq[seq_coor_t]
@@ -283,8 +286,8 @@ proc align1*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
   var d_path_idx: int32 = 0
   var max_idx: int32 = 0
   #var d_path: seq[d_path_data2]
-  var aln_path: seq[path_point]
-  var align_rtn: ref alignment
+  #var aln_path: seq[path_point]
+  #var align_rtn: ref alignment
   var aligned: bool = false
   ## #printf("debug: %ld %ld\n", q_len, t_len);
   ## #printf("%s\n", query_seq);
@@ -294,7 +297,7 @@ proc align1*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
   newSeq(U, (max_d * 2 + 1))
   k_offset = max_d
   mem(d_path, max_d, band_size)
-  align_rtn = mem2(aln_path, q_len, t_len)
+  mem2(aln_path, q_len, t_len, align_rtn)
   ## #fprintf(stderr, "UV sz aln sz2: %d %d %d %d\n", (max_d * 2 + 1), sizeof(seq_coor_t), (q_len + t_len + 1), sizeof(d_path_data2));
   ## #printf("max_d: %lu, band_size: %lu\n", max_d, band_size);
   best_m = - 1
@@ -362,13 +365,21 @@ proc align1*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
     inc(d)
   #free(aln_path)
   #log("Leaving align")
-  return align_rtn
+  #return align_rtn
 
 proc align*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
            t_len: seq_coor_t; band_tolerance: seq_coor_t; get_aln_str: bool): ref alignment =
+  var align_rtn: ref alignment
+  new(align_rtn)
   var d_path: seq[d_path_data2]
+  var aln_path: seq[path_point]
   newSeq(d_path, 0)
-  return align1(query_seq, q_len, target_seq, t_len, band_tolerance, get_aln_str, d_path)
+  newSeq(aln_path, 0)
+  align_rtn.t_aln_str = newString(0)
+  align_rtn.q_aln_str = newString(0)
+  align1(query_seq, q_len, target_seq, t_len, band_tolerance, get_aln_str,
+      d_path, aln_path, align_rtn[])
+  return align_rtn
 
 #proc free_alignment*(aln: ptr alignment) =
 #  free(aln.q_aln_str)

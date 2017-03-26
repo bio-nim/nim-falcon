@@ -562,7 +562,7 @@ proc generate_consensus*(input_seq: cStringArray; n_seq: int; min_cov: int;
   var sda_ptr: seq_addr_array
   var kmer_match_ptr: ref kmer_match
   var arange: ref aln_range
-  var aln: ref alignment
+  #var aln: ref alignment
   var tags_list: seq[ref align_tags_t]
   ## #char * consensus;
   var consensus: ref consensus_data
@@ -586,9 +586,16 @@ proc generate_consensus*(input_seq: cStringArray; n_seq: int; min_cov: int;
   add_sequence(0.seq_coor_t, K.cuint, input_seq[0], len(input_seq[0]).seq_coor_t, sda_ptr, sa_ptr, lk_ptr)
   ## #mask_k_mer(1 << (K * 2), lk_ptr, 16);
   aligned_seq_count = 0
-  j = 1
+
   var d_path: seq[d_path_data2]
+  var aln_path: seq[path_point]
+  var aln: alignment
   newSeq(d_path, 0)
+  newSeq(aln_path, 0)
+  aln.t_aln_str = newString(0)
+  aln.q_aln_str = newString(0)
+
+  j = 1
   while j < seq_count:
     ## #printf("seq_len: %ld %u\n", j, strlen(input_seq[j]));
     kmer_match_ptr = find_kmer_pos_for_seq(input_seq[j.int], len(input_seq[j.int]).seq_coor_t, K.cuint,
@@ -611,8 +618,9 @@ proc generate_consensus*(input_seq: cStringArray; n_seq: int; min_cov: int;
       continue
     const
       INDEL_ALLOWENCE_2 = 150
-    aln = DW_banded.align1((addr input_seq[j.int][0]) + arange.s1, arange.e1 - arange.s1,
-              (addr input_seq[0][0]) + arange.s2, arange.e2 - arange.s2, INDEL_ALLOWENCE_2, true, d_path)
+    DW_banded.align1((addr input_seq[j.int][0]) + arange.s1, arange.e1 - arange.s1,
+              (addr input_seq[0][0]) + arange.s2, arange.e2 - arange.s2, INDEL_ALLOWENCE_2, true,
+              d_path, aln_path, aln)
     if (aln.aln_str_size > 500) and ((cdouble(aln.dist) / cdouble(aln.aln_str_size)) < max_diff):
       tags_list[aligned_seq_count] = get_align_tags(aln.q_aln_str, aln.t_aln_str,
           aln.aln_str_size, arange, j.uint32, 0.seq_coor_t)

@@ -193,6 +193,7 @@ proc format_seq(sequ: string, col: int): string =
   result.setLen(bn+tail)
   #result[(bn+tail)] = '\l' # Python did not add final newline
 proc process_consensus(cargs: ConsensusArgs) {.thread} =
+    discard GC_disable
     discard """
     if thread_msa_array == nil:
       log "Was nil"
@@ -258,21 +259,33 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
     trim_size: trim_size,
     min_cov_aln: min_cov_aln,
     max_cov_aln: max_cov_aln)
+  #log("config=", config)
+  var threads = newSeq[ref Thread[ConsensusArgs]](0)
   for q in get_seq_data(config, min_n_read, min_len_aln):
     var (seqs, seed_id, config_same) = q
-    #log("len(seqs)=", $(len(seqs), ", seed_id=", seed_id, "config=", config))
+    log("len(seqs)=", $len(seqs), ", seed_id=", seed_id)
     var cargs: ConsensusArgs = (inseqs: seqs, seed_id: seed_id, config: config)
     if n_core == 0:
       #common.benchmark "loop":
-        process_consensus(cargs)
-    #else:
+      process_consensus(cargs)
+    else:
+      #let thread = wait(threads)
+      var rthread: ref Thread[ConsensusArgs]
+      new(rthread)
+      #threads.add(rthread)
+      createThread(rthread[], process_consensus, cargs)
+      joinThread(rthread[])
     #  spawn process_consensus(cargs)
     #  #spawn os.sleep(1000)
     #  #spawn simple(cargs)
     #log("tot=$1 occ=$2, free=$3 b4" % [$getTotalMem(), $getOccupiedMem(), $getFreeMem()])
     #GC_fullCollect()
     #log("tot=$1 occ=$2, free=$3 now" % [$getTotalMem(), $getOccupiedMem(), $getFreeMem()])
-  sync()
+  #sync()
+  log("Num threads:", $len(threads))
+  for rthread in threads:
+    joinThread(rthread[])
+    log("Finished a thread.")
   log("tot=$1 occ=$2, free=$3 b4" % [$getTotalMem(), $getOccupiedMem(), $getFreeMem()])
   GC_fullCollect()
   log("tot=$1 occ=$2, free=$3 now" % [$getTotalMem(), $getOccupiedMem(), $getFreeMem()])

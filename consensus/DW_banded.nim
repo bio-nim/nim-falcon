@@ -63,6 +63,7 @@
 import common
 #import algorithm  # We need a sort with a max-index.
 
+common.usePtr[byte]()
 common.usePtr[char]()
 #common.usePtr[d_path_data2]()
 
@@ -130,6 +131,16 @@ proc print_d_path*(base: var seq[d_path_data2]; max_idx: int) =
   while idx < max_idx:
     echo "dp ", idx, " ", repr(base[idx.int])
     inc(idx)
+
+proc bzero[T](uninit: var seq[T]) =
+  let n = len(uninit) * sizeof(T)
+  let bz: ptr byte = cast[ptr byte](addr (uninit[0]))
+  for i in 0..<n:
+    bz[i] = 0
+proc bzero(uninit: var string) =
+  let n = len(uninit)
+  for i in 0..<n:
+    uninit[i] = '\0'
 #"""
 
 #
@@ -146,15 +157,19 @@ proc mem(d_path: var seq[d_path_data2], max_d, band_size: seq_coor_t) =
   #log("Big seq:", $ssize)
   #newSeq(d_path, (max_d * (band_size + 1) * 2 + 1)) # maybe drop +1?
   d_path.setLen(ssize)
+  #bzero(d_path)
   ## #fprintf(stderr, "calloc(%d x %d)\n", max_d * (band_size + 1 ) * 2 + 1, sizeof(d_path_data2));
 proc mem2(aln_path: var seq[path_point], q_len, t_len: seq_coor_t, align_rtn: var alignment) =
   #var align_rtn: ref alignment
   #newSeq(aln_path, (q_len + t_len + 1))
   #new(align_rtn)
   aln_path.setLen(q_len + t_len + 1)
+  #bzero(aln_path)
   let slen = q_len + t_len + 1
   align_rtn.t_aln_str.setLen(slen) # = newString(q_len + t_len + 1)
   align_rtn.q_aln_str.setLen(slen) # = newString(q_len + t_len + 1)
+  #bzero(align_rtn.t_aln_str)
+  #bzero(align_rtn.q_aln_str)
   align_rtn.aln_str_size = 0
   align_rtn.aln_q_s = 0
   align_rtn.aln_q_e = 0
@@ -293,6 +308,9 @@ proc align1*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
   let uv_len = max_d * 2 + 1
   U.setLen(uv_len)
   V.setLen(uv_len)
+  # These bzero() are needed, unfortunately. Can they be faster?
+  bzero(U)
+  bzero(V)
   band_size = band_tolerance * 2
   mem(d_path, max_d, band_size)
   mem2(aln_path, q_len, t_len, align_rtn)

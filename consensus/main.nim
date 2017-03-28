@@ -157,6 +157,28 @@ proc get_consensus_without_trim(args: ConsensusArgs): ConsensusResult =
 proc findall_patt(consensus: string, patt: Regex): seq[string] =
   result = findall(consensus, patt)
   #echo consensus[0], " ", len(consensus), " ", consensus[^1], " ", len(result)
+
+iterator findall_good_regions(consensus: string, outoo: var string): int =
+  log("consensus:", repr(consensus))
+  let n = len(consensus)
+  var cbeg = 0
+  var cend = 0
+  while cend < n:
+    let c = consensus[cend]
+    if c == 'A' or c == 'C' or c == 'G' or c == 'T':
+      inc(cend)
+      continue
+    if cend != cbeg:
+      outoo.setLen(cend-cbeg)
+      outoo[0..^1] = consensus[cbeg..<cend]
+      yield (cend-cbeg)
+    inc(cend)
+    cbeg = cend
+  if cend != cbeg:
+    outoo.setLen(cend-cbeg)
+    outoo[0..^1] = consensus[cbeg..<cend]
+    yield (cend-cbeg)
+
 proc format_seq(sequ: string, col: int): string =
   result = newString(len(sequ) + len(sequ) div col + 1)
   var bo = 0
@@ -190,14 +212,14 @@ proc process_consensus(cargs: ConsensusArgs) {.thread} =
     var good_regions: Regex
     if good_regions.isNil:
       good_regions = re"[ACGT]+"
-      #log("good_regions isNil!!!")
-    var cns = findall_patt(consensus, good_regions)
-    if len(cns) == 0:
-        return
+    #  #log("good_regions isNil!!!")
+    #var cns = findall_patt(consensus, good_regions)
     if true: #args.output_multi:
         var seq_i = 0
-        for cns_seq in cns:
-            #log("%d %d" %(len(cns_seq), len(consensus)))
+        #for cns_seq in findall_patt(consensus, good_regions):
+        var cns_seq = newStringOfCap(len(consensus))
+        for _ in findall_good_regions(consensus, cns_seq):
+            #log("$# $#\L $#\L $#" % [$len(cns_seq), $len(consensus), repr(cns_seq), repr(consensus)])
             if len(cns_seq) < 500:
                 return
             if seq_i >= 10:
@@ -206,10 +228,11 @@ proc process_consensus(cargs: ConsensusArgs) {.thread} =
             echo ">prolog/", seed_id, seq_i, "/", 0, "_", len(cns_seq)
             echo format_seq(cns_seq, 80)
             seq_i += 1
-    else:
-        #cns.sort(key = lambda x: len(x))
-        echo ">"&seed_id
-        echo cns[cns.high-1]
+    #else:
+    #    var cns = findall_good_regions(consensus)
+    #    #cns.sort(key = lambda x: len(x))
+    #    echo ">"&seed_id
+    #    echo cns[cns.high-1]
 discard """
 proc simple(cargs: ConsensusArgs) =
   echo "hi in simple()"

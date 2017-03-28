@@ -590,10 +590,14 @@ proc generate_consensus*(input_seq: cStringArray; n_seq: int; min_cov: int;
   var d_path: seq[d_path_data2]
   var aln_path: seq[path_point]
   var aln: alignment
+  var U: seq[seq_coor_t]
+  var V: seq[seq_coor_t]
   newSeq(d_path, 0)
   newSeq(aln_path, 0)
   aln.t_aln_str = newString(0)
   aln.q_aln_str = newString(0)
+  newSeq(U, 0)
+  newSeq(V, 0)
 
   j = 1
   while j < seq_count:
@@ -620,7 +624,7 @@ proc generate_consensus*(input_seq: cStringArray; n_seq: int; min_cov: int;
       INDEL_ALLOWENCE_2 = 150
     DW_banded.align1((addr input_seq[j.int][0]) + arange.s1, arange.e1 - arange.s1,
               (addr input_seq[0][0]) + arange.s2, arange.e2 - arange.s2, INDEL_ALLOWENCE_2, true,
-              d_path, aln_path, aln)
+              d_path, aln_path, aln, U, V)
     if (aln.aln_str_size > 500) and ((cdouble(aln.dist) / cdouble(aln.aln_str_size)) < max_diff):
       tags_list[aligned_seq_count] = get_align_tags(aln.q_aln_str, aln.t_aln_str,
           aln.aln_str_size, arange, j.uint32, 0.seq_coor_t)

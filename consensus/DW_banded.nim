@@ -262,10 +262,8 @@ proc new_x_and_y(x0, y0, q_len, t_len: seq_coor_t, query_seq, target_seq: ptr ch
       return (x, y)
 proc align1*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
            t_len: seq_coor_t; band_tolerance: seq_coor_t; get_aln_str: bool,
-           d_path: var seq[d_path_data2], aln_path: var seq[path_point], align_rtn: var alignment) =
+           d_path: var seq[d_path_data2], aln_path: var seq[path_point], align_rtn: var alignment, U,V: var seq[seq_coor_t]) =
   #log("In align...")
-  var V: seq[seq_coor_t]
-  var U: seq[seq_coor_t]
   ## # array of matched bases for each "k"
   var k_offset: seq_coor_t
   var d: seq_coor_t
@@ -292,14 +290,15 @@ proc align1*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
   ## #printf("debug: %ld %ld\n", q_len, t_len);
   ## #printf("%s\n", query_seq);
   max_d = seq_coor_t(0.3 * float(q_len + t_len))
+  let uv_len = max_d * 2 + 1
+  U.setLen(uv_len)
+  V.setLen(uv_len)
   band_size = band_tolerance * 2
-  newSeq(V, (max_d * 2 + 1))
-  newSeq(U, (max_d * 2 + 1))
-  k_offset = max_d
   mem(d_path, max_d, band_size)
   mem2(aln_path, q_len, t_len, align_rtn)
   ## #fprintf(stderr, "UV sz aln sz2: %d %d %d %d\n", (max_d * 2 + 1), sizeof(seq_coor_t), (q_len + t_len + 1), sizeof(d_path_data2));
   ## #printf("max_d: %lu, band_size: %lu\n", max_d, band_size);
+  k_offset = max_d
   best_m = - 1
   min_k = 0
   max_k = 0
@@ -373,12 +372,16 @@ proc align*(query_seq: ptr char; q_len: seq_coor_t; target_seq: ptr char;
   new(align_rtn)
   var d_path: seq[d_path_data2]
   var aln_path: seq[path_point]
+  var U: seq[seq_coor_t]
+  var V: seq[seq_coor_t]
   newSeq(d_path, 0)
   newSeq(aln_path, 0)
   align_rtn.t_aln_str = newString(0)
   align_rtn.q_aln_str = newString(0)
+  newSeq(U, 0)
+  newSeq(V, 0)
   align1(query_seq, q_len, target_seq, t_len, band_tolerance, get_aln_str,
-      d_path, aln_path, align_rtn[])
+      d_path, aln_path, align_rtn[], U, V)
   return align_rtn
 
 #proc free_alignment*(aln: ptr alignment) =

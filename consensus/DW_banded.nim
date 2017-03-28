@@ -131,17 +131,16 @@ proc print_d_path*(base: var seq[d_path_data2]; max_idx: int) =
   while idx < max_idx:
     echo "dp ", idx, " ", repr(base[idx.int])
     inc(idx)
+#"""
 
 proc bzero[T](uninit: var seq[T]) =
   let n = len(uninit) * sizeof(T)
   let bz: ptr byte = cast[ptr byte](addr (uninit[0]))
-  for i in 0..<n:
-    bz[i] = 0
+  system.zeroMem(bz, n)
 proc bzero(uninit: var string) =
   let n = len(uninit)
-  for i in 0..<n:
-    uninit[i] = '\0'
-#"""
+  let bz: ptr char = cast[ptr char](addr (uninit[0]))
+  zeroMem(bz, n)
 
 #
 # These are split from align() only for profiling.

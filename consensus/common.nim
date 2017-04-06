@@ -169,7 +169,7 @@ proc log*(msgs: varargs[string]) =
     write(stderr, s)
   write(stderr, '\l')
   return
-template benchmark*(benchmarkName: string, code: stmt) =
+template benchmark*(benchmarkName: string, code: typed) =
   let t0 = times.epochTime()
   code
   let elapsed = times.epochTime() - t0

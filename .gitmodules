@@ -1,6 +1,10 @@
 [submodule "repos/nim-DAZZ_DB"]
 	path = repos/nim-DAZZ_DB
 	url = git://github.com/bio-nim/nim-DAZZ_DB
+	branch = dev
 [submodule "repos/nim-htslib"]
 	path = repos/nim-htslib
 	url = git://github.com/bio-nim/nim-htslib
+[submodule "repos/nim-DALIGNER"]
+	path = repos/nim-DALIGNER
+	url = git://github.com/bio-nim/nim-DALIGNER.git

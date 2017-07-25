@@ -454,6 +454,10 @@ proc get_cns_from_align_tags*(tag_seqs: var seq[ref align_tags_t]; n_tag_seqs: s
               score = cdouble(aln_col.link_count[ck]) -
                   cdouble(coverage[i]) * 0.5
             else:
+              #echo repr(aln_col.link_count[ck])
+              #echo repr(coverage[i])
+              #echo pi, " ", pj, " ", pkk
+              #echo repr(msa_array[pi])
               score = msa_array[pi].delta[pj].base[pkk].score +
                   cdouble(aln_col.link_count[ck]) -
                   cdouble(coverage[i]) * 0.5

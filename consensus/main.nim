@@ -159,7 +159,6 @@ proc findall_patt(consensus: string, patt: Regex): seq[string] =
   #echo consensus[0], " ", len(consensus), " ", consensus[^1], " ", len(result)
 
 iterator findall_good_regions(consensus: string, outoo: var string): int =
-  log("consensus:", repr(consensus))
   let n = len(consensus)
   var cbeg = 0
   var cend = 0
@@ -220,7 +219,7 @@ proc process_consensus(cargs: ConsensusArgs) {.thread} =
         #for cns_seq in findall_patt(consensus, good_regions):
         var cns_seq = newStringOfCap(len(consensus))
         for _ in findall_good_regions(consensus, cns_seq):
-            #log("$# $#\L $#\L $#" % [$len(cns_seq), $len(consensus), repr(cns_seq), repr(consensus)])
+            #log("$# $#\L $#" % [$len(cns_seq), $len(consensus), repr(cns_seq)]) #, repr(consensus)])
             if len(cns_seq) < 500:
                 return
             if seq_i >= 10:
@@ -282,7 +281,7 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
     #GC_fullCollect()
     #log("tot=$1 occ=$2, free=$3 now" % [$getTotalMem(), $getOccupiedMem(), $getFreeMem()])
   #sync()
-  log("Num threads:", $len(threads))
+  #log("Num threads still running:", $len(threads)) # not necessarily
   for rthread in threads:
     joinThread(rthread[])
     log("Finished a thread.")

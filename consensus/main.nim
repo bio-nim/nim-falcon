@@ -221,7 +221,7 @@ proc process_consensus(cargs: ConsensusArgs) {.thread} =
         for _ in findall_good_regions(consensus, cns_seq):
             #log("$# $#\L $#" % [$len(cns_seq), $len(consensus), repr(cns_seq)]) #, repr(consensus)])
             if len(cns_seq) < 500:
-                return
+                continue
             if seq_i >= 10:
                 break
             #print ">prolog/%s%01d/%d_%d" % (seed_id, seq_i, 0, len(cns_seq))

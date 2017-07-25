@@ -240,6 +240,17 @@ proc simple(cargs: ConsensusArgs) =
   discard get_consensus_without_trim(cargs)
   """
 
+proc waitForOpenThreadIndex(threads: var seq[ref Thread[ConsensusArgs]]): int =
+  let n = len(threads)
+  assert(n > 0)
+  for i in 0..<n:
+    if nil == threads[i]:
+      return i
+  while true:
+    for i in 0..<n:
+      if not running(threads[i][]):
+        return i
+    os.sleep(100)
 proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10, max_n_read=500,
           trim=false, output_full=false, output_multi=false,
           min_idt="0.70", edge_tolerance=1000, trim_size=50,
@@ -259,7 +270,7 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
     min_cov_aln: min_cov_aln,
     max_cov_aln: max_cov_aln)
   #log("config=", config)
-  var threads = newSeq[ref Thread[ConsensusArgs]](0)
+  var threads = newSeq[ref Thread[ConsensusArgs]](n_core)
   for q in get_seq_data(config, min_n_read, min_len_aln):
     var (seqs, seed_id, config_same) = q
     log("len(seqs)=", $len(seqs), ", seed_id=", seed_id)
@@ -271,9 +282,11 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
       #let thread = wait(threads)
       var rthread: ref Thread[ConsensusArgs]
       new(rthread)
+      let i = waitForOpenThreadIndex(threads)
       #threads.add(rthread)
+      threads[i] = rthread
       createThread(rthread[], process_consensus, cargs)
-      joinThread(rthread[])
+      #joinThread(rthread[])
     #  spawn process_consensus(cargs)
     #  #spawn os.sleep(1000)
     #  #spawn simple(cargs)
@@ -283,8 +296,9 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
   #sync()
   #log("Num threads still running:", $len(threads)) # not necessarily
   for rthread in threads:
-    joinThread(rthread[])
-    log("Finished a thread.")
+    if nil != rthread:
+      joinThread(rthread[])
+      log("Finished a thread.")
   log("tot=$1 occ=$2, free=$3 b4" % [$getTotalMem(), $getOccupiedMem(), $getFreeMem()])
   GC_fullCollect()
   log("tot=$1 occ=$2, free=$3 now" % [$getTotalMem(), $getOccupiedMem(), $getFreeMem()])

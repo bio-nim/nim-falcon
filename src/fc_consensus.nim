@@ -1,23 +1,27 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
-import nimprof
+#import nimprof
 
-from common import log
-from falcon import nil
-from DW_banded import nil
-from kmer_lookup_c import nil
-from poo import nil
+from falcon/consensus/common import log
+from falcon/consensus/falcon import nil
+from falcon/consensus/DW_banded import nil
+from falcon/consensus/kmer_lookup_c import nil
+#from falcon/consensus/poo import nil
 
 import os
 import algorithm
 import threadpool
-import nre
 import sequtils
 import sets
 from strutils import `strip`, `split`
 from strutils import `%`, `formatFloat`, `ffdecimal`
 
-
-#var good_regions {.threadvar.}: Regex
+# This has been problematic.
+# But the main reason to avoid Regex is described here:
+#   https://nim-lang.org/blog/2015/10/27/version-0120-released.html
+#   "could not import: pcre_free_study"
+when defined(use_pcre):
+  import nre
+  var good_regions {.threadvar.}: Regex
 
 proc get_longest_reads(seqs: seq[string], max_n_read, max_cov_aln: int): seq[string] =
     var longest_n_reads = max_n_read
@@ -48,6 +52,7 @@ proc get_longest_sorted_reads(seqs: seq[string], max_n_read, max_cov_aln: int): 
   return get_longest_reads(sorted_seqs, max_n_read, max_cov_aln)
 type
   Config = tuple
+    output_multi: bool
     min_cov: int
     K: int
     max_n_read: int
@@ -154,9 +159,11 @@ proc get_consensus_without_trim(args: ConsensusArgs): ConsensusResult =
     common.free_consensus_data(consensus_data_ptr)
     return (consensus, args.seed_id)
   """
-proc findall_patt(consensus: string, patt: Regex): seq[string] =
-  result = findall(consensus, patt)
-  #echo consensus[0], " ", len(consensus), " ", consensus[^1], " ", len(result)
+
+when defined(use_pcre):
+  proc findall_patt(consensus: string, patt: Regex): seq[string] =
+    result = findall(consensus, patt)
+    #echo consensus[0], " ", len(consensus), " ", consensus[^1], " ", len(result)
 
 iterator findall_good_regions(consensus: string, outoo: var string): int =
   let n = len(consensus)
@@ -191,6 +198,17 @@ proc format_seq(sequ: string, col: int): string =
   result[bn .. <(bn+tail)] = sequ[bo .. <(bo+tail)]
   result.setLen(bn+tail)
   #result[(bn+tail)] = '\l' # Python did not add final newline
+proc write_seq(cns_seq: string, seed_id: string, seq_i: var int): bool =
+            # Return false when done.
+            if len(cns_seq) < 500:
+              return true
+            if seq_i >= 10:
+              return false
+            #print ">prolog/%s%01d/%d_%d" % (seed_id, seq_i, 0, len(cns_seq))
+            echo ">prolog/", seed_id, seq_i, "/", 0, "_", len(cns_seq)
+            echo format_seq(cns_seq, 80)
+            seq_i += 1
+            return true
 proc process_consensus(cargs: ConsensusArgs) {.thread} =
     discard GC_disable
     discard """
@@ -202,6 +220,7 @@ proc process_consensus(cargs: ConsensusArgs) {.thread} =
     """
     #var (consensus, seed_id) = get_consensus_without_trim(cargs)
     var (consensus, seed_id) = get_con(cargs)
+    let config = cargs.config
     #log("len(consensus)=", $len(consensus), " in seed ", seed_id)
     if len(consensus) < 500:
         return
@@ -209,26 +228,26 @@ proc process_consensus(cargs: ConsensusArgs) {.thread} =
         echo ">"&seed_id&"_f"
         echo consensus
         return
-    var good_regions: Regex
-    if good_regions.isNil:
-      good_regions = re"[ACGT]+"
-    #  #log("good_regions isNil!!!")
-    #var cns = findall_patt(consensus, good_regions)
-    if true: #args.output_multi:
+    when defined(use_pcre):
+      var good_regions: Regex
+      if good_regions.isNil:
+        good_regions = re"[ACGT]+"
+        #  #log("good_regions isNil!!!")
+      #var cns = findall_patt(consensus, good_regions)
+    if config.output_multi:
         var seq_i = 0
-        #for cns_seq in findall_patt(consensus, good_regions):
-        var cns_seq = newStringOfCap(len(consensus))
-        for _ in findall_good_regions(consensus, cns_seq):
+        when defined(use_pcre):
+          for cns_seq in findall_patt(consensus, good_regions):
+            let more = write_seq(cns_seq, seed_id, seq_i)
+        else:
+          var cns_seq = newStringOfCap(len(consensus))
+          for _ in findall_good_regions(consensus, cns_seq):
             #log("$# $#\L $#" % [$len(cns_seq), $len(consensus), repr(cns_seq)]) #, repr(consensus)])
-            if len(cns_seq) < 500:
-                continue
-            if seq_i >= 10:
-                break
-            #print ">prolog/%s%01d/%d_%d" % (seed_id, seq_i, 0, len(cns_seq))
-            echo ">prolog/", seed_id, seq_i, "/", 0, "_", len(cns_seq)
-            echo format_seq(cns_seq, 80)
-            seq_i += 1
-    #else:
+            let more = write_seq(cns_seq, seed_id, seq_i)
+            if not more:
+              break
+    else:
+        raiseAssert("--output-multi is required for now.")
     #    var cns = findall_good_regions(consensus)
     #    #cns.sort(key = lambda x: len(x))
     #    echo ">"&seed_id
@@ -255,12 +274,14 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
           trim=false, output_full=false, output_multi=false,
           min_idt="0.70", edge_tolerance=1000, trim_size=50,
           n_core=24): int =
+  doAssert(output_multi, "--output-multi is required for now.")
   log("main(n_core=", $n_core, ")")
   if n_core > 0:
     #threadpool.setMaxPoolSize(n_core)
     #sync() # Let extra threads shutdown.
     discard
   let config: Config = (
+    output_multi: output_multi,
     min_cov: min_cov,
     K: 8, # not cli
     max_n_read: max_n_read,
@@ -311,7 +332,7 @@ when isMainModule:
     "edge_tolerance": "for trimming, the there is unaligned edge leng > edge_tolerance, ignore the read",
     "trim": "trim the input sequence with k-mer spare dynamic programming to find the mapped range",
     "trim_size": "the size for triming both ends from initial sparse aligned region",
-    "output_multi": "output multi correct regions",
+    "output_multi": "output multiple correct regions",
     "output_full": "output uncorrected regions too",
     "min_n_read": "1 + minimum number of reads used in generating the consensus; a seed read with fewer alignments will be completely ignored",
     "max_n_read": "1 + maximum number of reads used in generating the consensus",

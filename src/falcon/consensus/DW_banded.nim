@@ -56,7 +56,7 @@
 ## #
 ## #
 
-{.passC: "-Wall -I.".}
+{.passC: "-Wall -I./falcon/consensus".}
 #{.passC: "-g -Wall -I. -fno-omit-frame-pointer -fno-strict-aliasing -DNDEBUG".} // from pip install -v
 {.compile: "data_sorter.c".}
 

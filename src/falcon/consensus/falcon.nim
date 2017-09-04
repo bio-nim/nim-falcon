@@ -102,7 +102,7 @@ type
 
   msa_delta_group_t* = object
     # TODO(CD): size and max_delta may be redundant now
-    gsize*: uint8
+    #gsize*: uint8
     #max_delta*: uint8
     delta*: seq[msa_base_group_t]
 
@@ -199,14 +199,14 @@ proc free_aln_col*(col: ptr align_tag_col_t) =
 
 proc allocate_delta_group*(g: ptr msa_delta_group_t, cap: int) =
   var
-    i: uint8
+    i: int
     j: cint
   #g.max_delta = 0 # -1?
   #g.delta = calloc0[msa_base_group_t](g.size)
   g.delta = newSeqOfCap[msa_base_group_t](cap)
   i = 0
-  g.gsize = 0
-  while i < g.gsize:
+  #g.gsize = cap
+  while i < g.delta.len:
     #g.delta[i].base = calloc[align_tag_col_t](5)
     j = 0
     while j < 5:
@@ -224,7 +224,8 @@ proc realloc_delta_group*(g: ptr msa_delta_group_t; new_size: int) =
     j: int #cint
     bs: int #uint8
     es: int #uint16
-  bs = g.gsize.int
+  #bs = g.gsize.int
+  bs = g.delta.len
   es = new_size
   g.delta.setLen(new_size) # calloc(..., new_size)
   i = bs
@@ -237,7 +238,7 @@ proc realloc_delta_group*(g: ptr msa_delta_group_t; new_size: int) =
       inc(j)
     inc(i)
   assert(new_size <= 255)
-  g.gsize= new_size.uint8
+  #g.gsize= new_size.uint8
 
 proc free_delta_group*(g: ptr msa_delta_group_t) =
   discard """
@@ -296,7 +297,7 @@ proc get_msa_working_sapce*(max_t_len: cuint): ref msa_pos_t =
   i = 0
   while i < max_t_len.int:
     #msa_array[i] = calloc[msa_delta_group_t](1)
-    msa_array[][i].gsize = 8
+    #msa_array[][i].gsize = 8
     allocate_delta_group(addr msa_array[][i], 8)
     inc(i)
   return msa_array
@@ -375,7 +376,7 @@ proc get_cns_from_align_tags*(tag_seqs: var seq[ref align_tags_t]; n_tag_seqs: s
       if msa_array[t_pos].delta.len <= delta.int:
         #msa_array[t_pos].max_delta = delta
         #if msa_array[t_pos].max_delta > msa_array[t_pos].delta.len.uint8:
-        realloc_delta_group(addr msa_array[][t_pos], delta.int + 1)
+        realloc_delta_group(addr msa_array[][t_pos], delta.int + 8)
       var base: uint8
       case c_tag.q_base
       of 'A':

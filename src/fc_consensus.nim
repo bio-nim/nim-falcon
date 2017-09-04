@@ -210,7 +210,7 @@ proc write_seq(cns_seq: string, seed_id: string, seq_i: var int): bool =
             seq_i += 1
             return true
 proc process_consensus(cargs: ConsensusArgs) {.thread} =
-    discard GC_disable
+    #discard GC_disable
     discard """
     if thread_msa_array == nil:
       log "Was nil"
@@ -275,6 +275,7 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
           min_idt="0.70", edge_tolerance=1000, trim_size=50,
           n_core=24): int =
   doAssert(output_multi, "--output-multi is required for now.")
+  doAssert(not trim, "--trim is required for now.")
   log("main(n_core=", $n_core, ")")
   if n_core > 0:
     #threadpool.setMaxPoolSize(n_core)

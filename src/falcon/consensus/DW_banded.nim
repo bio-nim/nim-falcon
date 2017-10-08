@@ -135,11 +135,11 @@ proc print_d_path*(base: var seq[d_path_data2]; max_idx: int) =
 
 proc bzero[T](uninit: var seq[T]) =
   let n = len(uninit) * sizeof(T)
-  let bz: ptr byte = cast[ptr byte](addr (uninit[0]))
+  let bz: ptr byte = cast[ptr byte](addr(uninit[0]))
   system.zeroMem(bz, n)
 proc bzero(uninit: var string) =
   let n = len(uninit)
-  let bz: ptr char = cast[ptr char](addr (uninit[0]))
+  let bz: ptr char = cast[ptr char](addr(uninit[0]))
   zeroMem(bz, n)
 
 #

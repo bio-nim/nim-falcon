@@ -444,8 +444,8 @@ proc run_track_reads*(settings: Settings) =
 
 proc run_stage2*(
     test=false,
-    read_to_contig_map="./4-quiver/read_maps/read_to_contig_map",
-    output="./2-asm-falcon/read_maps/dump_rawread_ids/rawread_to_contigs",
+    read_to_contig_map="./4-quiver/track_reads/read_to_contig_map",
+    output="./4-quiver/track_reads/rawread_to_contigs",
     bestn=40,
     # All the rest are ignored....
     n_core=0, phased_read_file="", rawread_ids="", min_len=2500,

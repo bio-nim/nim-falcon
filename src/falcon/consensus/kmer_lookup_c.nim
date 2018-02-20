@@ -118,7 +118,7 @@ proc get_kmer_bitvector*(sa: ptr base; K: cuint): seq_coor_t =
   i = 0
   while i < K:
     kmer_bv = kmer_bv shl 2
-    kmer_bv = kmer_bv or ((int(sa[i.int])) and 0x00000003)
+    kmer_bv = kmer_bv or seq_coor_t((int(sa[i.int])) and 0x00000003)
     inc(i)
   return kmer_bv
 

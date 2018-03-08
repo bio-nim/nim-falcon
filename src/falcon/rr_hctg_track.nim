@@ -450,7 +450,7 @@ proc run_stage2*(
     # All the rest are ignored....
     n_core=0, phased_read_file="", rawread_ids="", min_len=2500,
     stream=false, debug=false, silent=false) =
-  # Stage 2
+  ## Stage 2 of rr_hctg_track
   if test:
     log("no tests")
     system.quit(system.QuitSuccess)

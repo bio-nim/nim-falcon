@@ -6,7 +6,10 @@ from sys import log
 
 from algorithm import nil
 from hashes import nil
+from json import nil
+import json
 from os import nil
+from ospaths import nil
 from osproc import nil
 #from "pure/osproc.nim" import nil
 from parsecsv import nil
@@ -126,6 +129,15 @@ proc glob_raw_reads_las*(): seq[string] =
   for fn in os.walkFiles("0-rawreads/las-merge-runs/m_*/uow-*/merged.las"):
     result.add(fn)
   algorithm.sort(result, system.cmp) # probably not needed
+
+proc get_raw_reads_las*(las_fofn_fn: string): seq[string] =
+  let jcontent = system.readFile(las_fofn_fn)
+  result = to(json.parseJson(jcontent), seq[string]) # json.to()
+  let fofn_dir = ospaths.parentDir(las_fofn_fn) # "" is ok
+  for i in 0 ..< result.len:
+    let fn = result[i]
+    if not ospaths.isAbsolute(fn):
+      result[i] = ospaths.joinPath(fofn_dir, fn)
 
 proc fillTuple[T: tuple, V](input: openarray[V]): T =
   #assert input.len == len(result.fields)
@@ -446,6 +458,7 @@ proc run_track_reads*(settings: Settings) =
 proc run_stage2*(
     test=false,
     read_to_contig_map="./4-quiver/track_reads/read_to_contig_map",
+    las_fofn_fn="./0-rawreads/las-gather/las_fofn.json",
     output="./4-quiver/track_reads/rawread_to_contigs",
     bestn=40,
     # All the rest are ignored....
@@ -456,7 +469,7 @@ proc run_stage2*(
     log("no tests")
     system.quit(system.QuitSuccess)
   var fn_rtns: seq[string] = @[]
-  let file_list = glob_raw_reads_las()
+  let file_list = get_raw_reads_las(las_fofn_fn)
   for fn in file_list:
     fn_rtns.add(fn & ".rr_hctg_track.partial.msgpack")
   log("file_list:", $file_list)

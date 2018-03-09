@@ -8,12 +8,15 @@
 [submodule "repos/nim-DALIGNER"]
 	path = repos/nim-DALIGNER
 	url = git://github.com/bio-nim/nim-DALIGNER.git
+	branch = dev
 [submodule "repos/nim-heap"]
 	path = repos/nim-heap
 	url = https://github.com/bio-nim/nim-heap.git
 [submodule "repos/cligen"]
 	path = repos/cligen
 	url = https://github.com/c-blake/cligen
+	branch = master
 [submodule "repos/msgpack4nim"]
 	path = repos/msgpack4nim
 	url = https://github.com/jangko/msgpack4nim
+	branch = master

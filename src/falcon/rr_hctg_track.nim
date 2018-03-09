@@ -122,7 +122,8 @@ proc mytuple_cmp(x, y: mytuple): int =
 
 proc glob_raw_reads_las*(): seq[string] =
   result = @[]
-  for fn in os.walkFiles("0-rawreads/m*/raw_reads.*.las"):
+  # TODO: Use 0-rawreads/las-gather/las_fofn.json, which are all called 'merged.las' now.
+  for fn in os.walkFiles("0-rawreads/las-merge-runs/m_*/uow-*/merged.las"):
     result.add(fn)
   algorithm.sort(result, system.cmp) # probably not needed
 

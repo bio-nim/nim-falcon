@@ -1,17 +1,17 @@
 [submodule "repos/nim-DAZZ_DB"]
 	path = repos/nim-DAZZ_DB
-	url = git://github.com/bio-nim/nim-DAZZ_DB
+	url = https://github.com/bio-nim/nim-DAZZ_DB
 	branch = dev
 [submodule "repos/nim-htslib"]
 	path = repos/nim-htslib
-	url = git://github.com/bio-nim/nim-htslib
+	url = https://github.com/bio-nim/nim-htslib
 [submodule "repos/nim-DALIGNER"]
 	path = repos/nim-DALIGNER
-	url = git://github.com/bio-nim/nim-DALIGNER.git
+	url = https://github.com/bio-nim/nim-DALIGNER
 	branch = dev
 [submodule "repos/nim-heap"]
 	path = repos/nim-heap
-	url = https://github.com/bio-nim/nim-heap.git
+	url = https://github.com/bio-nim/nim-heap
 [submodule "repos/cligen"]
 	path = repos/cligen
 	url = https://github.com/c-blake/cligen

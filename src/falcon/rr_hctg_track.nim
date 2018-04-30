@@ -130,10 +130,11 @@ proc glob_raw_reads_las*(): seq[string] =
     result.add(fn)
   algorithm.sort(result, system.cmp) # probably not needed
 
-proc get_raw_reads_las*(las_fofn_fn: string): seq[string] =
-  let jcontent = system.readFile(las_fofn_fn)
+proc get_fns_from_json*(json_fn: string): seq[string] =
+  log("Reading JSON from '", json_fn, "'")
+  let jcontent = system.readFile(json_fn)
   result = to(json.parseJson(jcontent), seq[string]) # json.to()
-  let fofn_dir = ospaths.parentDir(las_fofn_fn) # "" is ok
+  let fofn_dir = ospaths.parentDir(json_fn) # "" is ok
   for i in 0 ..< result.len:
     let fn = result[i]
     if not ospaths.isAbsolute(fn):
@@ -458,8 +459,9 @@ proc run_track_reads*(settings: Settings) =
 proc run_stage2*(
     test=false,
     read_to_contig_map="./4-quiver/track_reads/read_to_contig_map",
-    las_fofn_fn="./0-rawreads/las-gather/las_fofn.json",
-    output="./4-quiver/track_reads/rawread_to_contigs",
+    #las_fofn_fn="./0-rawreads/las-gather/las_fofn.json",
+    partials_fn="./4-quiver/track-reads/partials.json",
+    output="./4-quiver/track-reads/rawread_to_contigs",
     bestn=40,
     # All the rest are ignored....
     n_core=0, phased_read_file="", rawread_ids="", min_len=2500,
@@ -468,11 +470,11 @@ proc run_stage2*(
   if test:
     log("no tests")
     system.quit(system.QuitSuccess)
-  var fn_rtns: seq[string] = @[]
-  let file_list = get_raw_reads_las(las_fofn_fn)
-  for fn in file_list:
-    fn_rtns.add(fn & ".rr_hctg_track.partial.msgpack")
-  log("file_list:", $file_list)
+  #var fn_rtns: seq[string] = @[]
+  let fn_rtns: seq[string] = get_fns_from_json(partials_fn)
+  #for fn in file_list:
+  #  fn_rtns.add(fn & ".rr_hctg_track.partial.msgpack")
+  #log("file_list:", $file_list)
   log("inputs:", $fn_rtns)
 
   #Aggregate hits from each individual LAS and keep the best n hit.
@@ -492,6 +494,7 @@ proc run_stage2*(
       let j = json.parseJson(jcontent)
     when true:
       log("Deserialize ", fn_rtn, " as msgpack...")
+      doAssert(os.fileExists(fn_rtn), fn_rtn)
       let infile = streams.newFileStream(fn_rtn, system.fmRead)
       defer:
         infile.close()

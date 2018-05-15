@@ -19,4 +19,4 @@
 [submodule "repos/msgpack4nim"]
 	path = repos/msgpack4nim
 	url = https://github.com/jangko/msgpack4nim
-	branch = master
+	#branch = master

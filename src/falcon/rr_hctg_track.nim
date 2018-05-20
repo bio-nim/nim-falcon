@@ -1,6 +1,7 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
 # Nim re-write of FALCON_unzip/falcon_unzip/rr_hctg_track.py
 import "../msgpack4nim/msgpack4nim.nim"
+import "../msgpack4nim/msgpack4collection.nim"
 from "../nim-heap/binaryheap" import nil
 from sys import log
 
@@ -60,16 +61,16 @@ proc tostring(src: str9, dst: var string) =
 proc hash(x: str9): hashes.Hash =
   return hashes.hash(tostring(x))
 
-proc unpack_type*(ss: streams.Stream, x: var str9) =
+proc unpack_type*(ss: var msgpack4nim.MsgStream, x: var str9) =
   var str: string
   msgpack4nim.unpack(ss, str)
   copyMem(addr x[0], addr str[0], 9)
 
-proc pack_type*(ss: streams.Stream, x: str9) =
+proc pack_type*(ss: var msgpack4nim.MsgStream, x: str9) =
   let str: string = tostring(x)
   msgpack4nim.pack(ss, str)
 
-proc pack_type*(ss: streams.Stream, x: binaryheap.Heap[mytuple]) =
+proc pack_type*(ss: var msgpack4nim.MsgStream, x: binaryheap.Heap[mytuple]) =
   let xseq: seq[mytuple] = sequtils.toSeq(binaryheap.items(x)) # unsorted
   msgpack4nim.pack(ss, xseq)
 proc `$`(x: str9): string =
@@ -409,10 +410,11 @@ proc run_tr_stage1(db_fn, fn: string, min_len, bestn: int): string =
   osproc.close(la4falcon_proc)
   let fn_rtn = "$#.rr_hctg_track.partial.msgpack" % [fn]
   log("Serialize '$#'" % [fn_rtn])
+  var msgss = msgpack4nim.initMsgStream() #you can pass some buffer capacity here https://github.com/jangko/msgpack4nim/issues/18
+  msgpack4nim.pack(msgss, rtn)
   var ss = streams.newFileStream(fn_rtn, system.fmWrite)
   defer: ss.close()
-  #ss.write($rtn)
-  msgpack4nim.pack(ss, rtn)
+  ss.write(msgss.data)
   return fn_rtn
 
 proc spawned_tr_stage1(db_fn, fn: string, min_len, bestn: int): string {.thread} =
@@ -498,8 +500,10 @@ proc run_stage2*(
       let infile = streams.newFileStream(fn_rtn, system.fmRead)
       defer:
         infile.close()
+      var msgss = msgpack4nim.initMsgStream()
+      msgss.data = infile.readAll()
       var res: mytable
-      msgpack4nim.unpack(infile, res)
+      msgpack4nim.unpack(msgss, res)
       log("  Updating bread_to_areads table with ", len(res), " breads.")
       for k,v in res.pairs:
         if not bread_to_areads.contains(k):

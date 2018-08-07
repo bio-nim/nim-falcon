@@ -1,7 +1,7 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
 #import nimprof
-from falcon.sys import log
-from falcon.rr_hctg_track import nil
+from falcon/sys import log
+from falcon/rr_hctg_track import nil
 
 proc rr_hctg_track1(
     test=false,

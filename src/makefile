@@ -5,7 +5,7 @@ NIMFLAGS+=--threadAnalysis:off
 NIMFLAGS+=--verbosity:2
 #NIMFLAGS+=-d:debug
 NIMFLAGS+=-d:release #-d:use_pcre
-NIMFLAGS+=--tlsemulation:on
+#NIMFLAGS+=--tlsemulation:on
 #NIMFLAGS+=-d:debugHeapLinks
 #NIMFLAGS+=--profiler:on --stackTrace:on
 #NIMFLAGS+=--passC:-Dexecvpe=execve

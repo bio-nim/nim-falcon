@@ -1,4 +1,6 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
+const version* = "0.0.0"
+
 from functional import padLeft
 
 from cpuinfo import nil
@@ -16,6 +18,9 @@ proc log*[Ty](x: varargs[Ty, `$`]): auto =
   let sofar = (times.epochTime() - start)
   let formatted = padLeft(strutils.formatFloat(sofar, format=strutils.ffDecimal, precision=1), 7)
   writeLine(stderr, formatted, "s ", msg)
+
+# Show version at start-up, for now.
+log("version=", $version, ", nim-version=", system.NimVersion)
 
 proc abspath*(fn: string): auto =
   if not strutils.startswith(fn, '/'):

@@ -1,3 +1,4 @@
+NIMFLAGS+=--parallelBuild:0
 #NIMFLAGS+=--path:/home/UNIXHOME/cdunn/repo/gh/nim-multiproc/
 NIMFLAGS+=--threads:on
 NIMFLAGS+=--threadAnalysis:off

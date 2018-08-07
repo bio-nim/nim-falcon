@@ -3,7 +3,7 @@ NIMFLAGS+=--parallelBuild:0
 NIMFLAGS+=--threads:on
 NIMFLAGS+=--threadAnalysis:off
 NIMFLAGS+=--verbosity:2
-#NIMFLAGS+=-d:debug
+NIMFLAGS+=-d:debug
 NIMFLAGS+=-d:release #-d:use_pcre
 #NIMFLAGS+=--tlsemulation:on
 #NIMFLAGS+=-d:debugHeapLinks
@@ -36,10 +36,13 @@ try: fc_rr_hctg_track2.exe
 fc_consensus.exe: fc_consensus.nim $(wildcard falcon/consensus/*.nim)
 fc_rr_hctg_track2.exe fc_rr_hctg_track.exe: $(wildcard falcon/*.nim)
 
+tarball:
+	PLAT=-osx-64  bash -vexu tarball.sh
+
 run-%: %.exe
 	./$*.exe
 %.exe: %.nim
 	nim ${NIMFLAGS} --out:$*.exe c $<
 clean:
 	rm -rf nimcache/
-	rm -f *.exe falcon/*.exe
+	rm -f *.exe falcon/*.exe *.gz

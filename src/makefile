@@ -37,7 +37,7 @@ fc_consensus.exe: fc_consensus.nim $(wildcard falcon/consensus/*.nim)
 fc_rr_hctg_track2.exe fc_rr_hctg_track.exe: $(wildcard falcon/*.nim)
 
 tarball:
-	PLAT=-osx-64  bash -vexu tarball.sh
+	bash -vexu tarball.sh
 
 run-%: %.exe
 	./$*.exe

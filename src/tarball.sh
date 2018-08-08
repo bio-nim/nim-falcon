@@ -11,8 +11,19 @@ set +x
 for F in "${FILES[@]}"; do
 	ln -f ${F} archive/bin/
 done
+os=${OSTYPE//[0-9.]/}
+
+if [[ "$os" == 'linux-gnu' ]]; then
+	PLAT='-linux-64'
+    SHA='sha256sum'
+elif [[ "$os" == 'darwin' ]]; then
+	PLAT='-osx-64'
+    SHA='sha -a 256'
+else
+	PLAT='-unknown'
+    SHA='echo'
+fi
 set -x
-PLAT=$(bash ./plat.sh)
 tar cvzf nim-falcon${PLAT}.tar.gz -C archive/ .
-shasum -a 256 nim-falcon${PLAT}.tar.gz
+${SHA} nim-falcon${PLAT}.tar.gz
 rm -rf archive/

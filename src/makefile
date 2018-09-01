@@ -15,6 +15,9 @@ THISDIR=${CURDIR}
 R=/home/UNIXHOME/cdunn/repo/bb/FALCON-integrate/FALCON-examples/run/greg200k-sv2
 #R=/lustre/hpcprod/cdunn/jira/se-809/run
 
+do: fc_do_task.exe
+	./$^ -h
+	./$^ ../../FALCON-examples/run/synth0/0-rawreads/build/task.json
 all: fc_rr_hctg_track2.exe fc_rr_hctg_track.exe fc_consensus.exe
 go: fc_rr_hctg_track.exe
 	./fc_rr_hctg_track.exe --help

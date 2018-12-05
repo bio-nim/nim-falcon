@@ -18,11 +18,13 @@
 	ignore=dirty
 [submodule "repos/cligen"]
 	path = repos/cligen
-	url = https://github.com/c-blake/cligen
+	#url = https://github.com/c-blake/cligen
+	url = https://github.com/bio-nim/cligen
 	ignore=dirty
-	branch = master
+	branch = dev
 [submodule "repos/msgpack4nim"]
 	path = repos/msgpack4nim
-	url = https://github.com/jangko/msgpack4nim
+	#url = https://github.com/jangko/msgpack4nim
+	url = https://github.com/bio-nim/msgpack4nim
 	ignore=dirty
-	#branch = master
+	branch = dev

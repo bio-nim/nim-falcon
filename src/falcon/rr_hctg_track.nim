@@ -302,7 +302,7 @@ proc stream_get_rid_to_phase(rawread_ids_fn: string,
     # We could save memory in the table by using "ref Phase", but
     # then the Phases would be reference-counted. Not a good trade-off.
     # And the real memory problem comes from the threads/sub-procs.
-    if rid_to_phase[rid].ctg_id.is_nil:
+    if rid_to_phase[rid].ctg_id == "":
       nout.inc
     else:
       nin.inc
@@ -361,13 +361,13 @@ proc tr_stage1(la4falcon_stream: streams.Stream, fn: string, min_len, bestn: int
     #log(" t_id_int:", t_id_int, ", len(r2p):", len(global_rid_to_phase))
     if t_id_int < len(global_rid_to_phase[]):
       let t_phase = global_rid_to_phase[t_id_int]
-      if t_phase.ctg_id != nil:
+      if t_phase.ctg_id != "":
         if t_phase.blockn != -1:
             let q_id_int = strutils.parseInt(q_id)
             #log("  q_id_int:", q_id_int)
             if q_id_int < len(global_rid_to_phase[]):
               let q_phase = global_rid_to_phase[q_id_int]
-              if q_phase.ctg_id != nil:
+              if q_phase.ctg_id != "":
                 #log("   t_phase:", t_phase)
                 #log("   q_phase:", q_phase)
                 if (q_phase.ctg_id == t_phase.ctg_id and q_phase.blockn == t_phase.blockn and

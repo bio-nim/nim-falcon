@@ -190,12 +190,12 @@ proc format_seq(sequ: string, col: int): string =
   var bo = 0
   var bn = 0
   while (bo+col) < len(sequ):
-    result[bn .. <(bn+col)] = sequ[bo .. <(bo+col)]
+    result[bn ..< (bn+col)] = sequ[bo ..< (bo+col)]
     result[(bn+col)] = '\l'
     bo += col
     bn += col + 1
   var tail = len(sequ) - bo
-  result[bn .. <(bn+tail)] = sequ[bo .. <(bo+tail)]
+  result[bn ..< (bn+tail)] = sequ[bo ..< (bo+tail)]
   result.setLen(bn+tail)
   #result[(bn+tail)] = '\l' # Python did not add final newline
 proc write_seq(cns_seq: string, seed_id: string, seq_i: var int): bool =

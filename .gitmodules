@@ -7,6 +7,7 @@
 	path = repos/nim-htslib
 	url = https://github.com/bio-nim/nim-htslib
 	ignore=dirty
+	branch = dev
 [submodule "repos/nim-DALIGNER"]
 	path = repos/nim-DALIGNER
 	url = https://github.com/bio-nim/nim-DALIGNER

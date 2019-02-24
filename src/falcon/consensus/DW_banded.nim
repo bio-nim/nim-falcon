@@ -137,10 +137,13 @@ proc bzero[T](uninit: var seq[T]) =
   let n = len(uninit) * sizeof(T)
   let bz: ptr byte = cast[ptr byte](addr(uninit[0]))
   system.zeroMem(bz, n)
+
+discard """
 proc bzero(uninit: var string) =
   let n = len(uninit)
   let bz: ptr char = cast[ptr char](addr(uninit[0]))
   zeroMem(bz, n)
+"""
 
 #
 # These are split from align() only for profiling.

@@ -1,4 +1,5 @@
 NIMFLAGS+=--parallelBuild:0
+NIMFLAGS+=--hint[Path]:off --hint[XDeclaredButNotUsed]:off
 #NIMFLAGS+=--path:/home/UNIXHOME/cdunn/repo/gh/nim-multiproc/
 NIMFLAGS+=--threads:on
 NIMFLAGS+=--threadAnalysis:off

@@ -1,8 +1,8 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
 # Nim re-write of FALCON_unzip/falcon_unzip/rr_hctg_track.py
-import "../msgpack4nim/msgpack4nim.nim"
-import "../msgpack4nim/msgpack4collection.nim"
-from "../nim-heap/binaryheap" import nil
+import ../msgpack4nim/msgpack4nim
+import ../msgpack4nim/msgpack4collection
+from ../nim-heap/binaryheap import nil
 from sys import log
 
 from algorithm import nil
@@ -61,16 +61,16 @@ proc tostring(src: str9, dst: var string) =
 proc hash(x: str9): hashes.Hash =
   return hashes.hash(tostring(x))
 
-proc unpack_type*(ss: var msgpack4nim.MsgStream, x: var str9) =
+proc unpack_type*(ss: msgpack4nim.MsgStream, x: var str9) =
   var str: string
   msgpack4nim.unpack(ss, str)
   copyMem(addr x[0], addr str[0], 9)
 
-proc pack_type*(ss: var msgpack4nim.MsgStream, x: str9) =
+proc pack_type*(ss: msgpack4nim.MsgStream, x: str9) =
   let str: string = tostring(x)
   msgpack4nim.pack(ss, str)
 
-proc pack_type*(ss: var msgpack4nim.MsgStream, x: binaryheap.Heap[mytuple]) =
+proc pack_type*(ss: msgpack4nim.MsgStream, x: binaryheap.Heap[mytuple]) =
   let xseq: seq[mytuple] = sequtils.toSeq(binaryheap.items(x)) # unsorted
   msgpack4nim.pack(ss, xseq)
 proc `$`(x: str9): string =
@@ -168,8 +168,6 @@ proc stream_get_rid_to_ctg_slow(infile: streams.Stream): auto =
     rid_to_ctg[t.rid].incl(t.ctg)
   return rid_to_ctg
 
-var logged_rid_to_ctg = false
-
 proc stream_get_rid_to_ctg(ss: streams.Stream, fn="rid_to_ctg"): auto =
   log("In stream_get_rid_to_ctg()")
   var
@@ -190,8 +188,10 @@ proc stream_get_rid_to_ctg(ss: streams.Stream, fn="rid_to_ctg"): auto =
     #log("rid=", rid, ", ctg=", ctg)
     if not rid_to_ctg.contains(rid):
       rid_to_ctg[rid] = sets.initSet[string](2)
-    if (not logged_rid_to_ctg) and (ctg in rid_to_ctg[rid]):
-      logged_rid_to_ctg = true
+
+    var global_logged_rid_to_ctg {.global.} = false
+    if (not global_logged_rid_to_ctg) and (ctg in rid_to_ctg[rid]):
+      global_logged_rid_to_ctg = true
       log("In ", $fn, ", found dup ctg ", $ctg, " for rid ", $rid, " from Row ", $csv.row, " matching one of ", $sequtils.toSeq(rid_to_ctg[rid].items()))
     #assert ctg notin rid_to_ctg[rid]
     rid_to_ctg[rid].incl(ctg)
@@ -331,8 +331,8 @@ proc get_rid_to_phase(phased_reads_fn, rawread_ids_fn: string): auto =
   log(" len(rid_to_phase)=", len(rid_to_phase[]))
   return rid_to_phase
 
-var global_rid_to_ctg: ref Table[string, sets.HashSet[string]]
-var global_rid_to_phase: ref seq[Phase]
+var global_rid_to_ctg {.threadvar.}: ref Table[string, sets.HashSet[string]]
+var global_rid_to_phase {.threadvar.}: ref seq[Phase]
 
 proc tr_stage1(la4falcon_stream: streams.Stream, fn: string, min_len, bestn: int): myprioritytable =
   # for each read in the b-read column inside the LAS files, we
@@ -410,7 +410,7 @@ proc run_tr_stage1(db_fn, fn: string, min_len, bestn: int): string =
   osproc.close(la4falcon_proc)
   let fn_rtn = "$#.rr_hctg_track.partial.msgpack" % [fn]
   log("Serialize '$#'" % [fn_rtn])
-  var msgss = msgpack4nim.initMsgStream() #you can pass some buffer capacity here https://github.com/jangko/msgpack4nim/issues/18
+  var msgss = msgpack4nim.MsgStream.init() #you can pass some buffer capacity here https://github.com/jangko/msgpack4nim/issues/18
   msgpack4nim.pack(msgss, rtn)
   var ss = streams.newFileStream(fn_rtn, system.fmWrite)
   defer: ss.close()
@@ -440,13 +440,13 @@ proc run_track_reads*(settings: Settings) =
   var responsesT = newSeq[FlowVar[string]](nsubs)
   for i in 0..<nsubs:
     let fn = settings.file_list[i]
-    let fv: FlowVar[string] = spawn spawned_tr_stage1(settings.db_fn, fn, settings.min_len, settings.bestn)
+    let fv: FlowVar[string] = threadpool.spawn spawned_tr_stage1(settings.db_fn, fn, settings.min_len, settings.bestn)
     responsesT[i] = fv
     responsesB[i] = fv
-  sync()
+  threadpool.sync()
   #while nsubs > 0:
   #  log("Awaiting...")
-  #  let i = awaitAny(responsesB)
+  #  let i = threadpool.awaitAny(responsesB)
   #  log(" Got i=", i)
   #  #assert i != -1
   #  let fv: FlowVar[string] = responsesT[i]
@@ -500,7 +500,7 @@ proc run_stage2*(
       let infile = streams.newFileStream(fn_rtn, system.fmRead)
       defer:
         infile.close()
-      var msgss = msgpack4nim.initMsgStream()
+      var msgss = msgpack4nim.MsgStream.init()
       msgss.data = infile.readAll()
       var res: mytable
       msgpack4nim.unpack(msgss, res)

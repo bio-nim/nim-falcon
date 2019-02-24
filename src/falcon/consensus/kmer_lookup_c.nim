@@ -68,7 +68,7 @@ const
   INT_MAX = int32.high
   LONG_MIN = clong.low
 
-var KMERMATCHINC*: seq_coor_t = 10000
+#var KMERMATCHINC*: seq_coor_t = 10000
 discard """
 proc compare_seq_coor*(a: pointer; b: pointer): cint =
   var arg1: ptr seq_coor_t = a

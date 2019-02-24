@@ -11,9 +11,8 @@ from strutils import nil
 from threadpool import nil
 from times import nil
 
-let start = times.epochTime()
-
 proc log*[Ty](x: varargs[Ty, `$`]): auto =
+  let start {.global.} = times.epochTime()
   let msg = strutils.join(x, "") # TODO: add spaces here, not at call-site
   let sofar = (times.epochTime() - start)
   let formatted = padLeft(strutils.formatFloat(sofar, format=strutils.ffDecimal, precision=1), 7)

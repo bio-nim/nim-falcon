@@ -98,7 +98,7 @@ type
     score*: cdouble
 
   msa_base_group_t* = object
-    base*: array[0 .. <MSA_BASE_GROUP_LEN, align_tag_col_t] # array of length 5
+    base*: array[0 .. (MSA_BASE_GROUP_LEN-1), align_tag_col_t] # array of length 5
 
   msa_delta_group_t* = object
     # TODO(CD): size and max_delta may be redundant now

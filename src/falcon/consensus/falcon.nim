@@ -670,6 +670,91 @@ proc generate_consensus*(input_seq: cStringArray; n_seq: int; min_cov: int;
   #free(tags_list)
   return consensus[]
 
+proc generate_consensus_from_mapping*(input_seq: cStringArray;
+                        input_aranges: seq[aln_range];
+                        n_seq: int; min_cov: int;
+                        K: int; min_idt: float32): consensus_data =
+  var j: int
+  var seq_count: int
+  var aligned_seq_count: seq_coor_t
+  #var aln: ref alignment
+  var tags_list: seq[ref align_tags_t]
+  var consensus: ref consensus_data
+  var max_diff: cdouble
+  max_diff = 1.0 - min_idt
+
+  # crap for align1()
+  var d_path: seq[d_path_data2]
+  var aln_path: seq[path_point]
+  var aln: alignment
+  var U: seq[seq_coor_t]
+  var V: seq[seq_coor_t]
+  newSeq(d_path, 0)
+  newSeq(aln_path, 0)
+  aln.t_aln_str = newString(0)
+  aln.q_aln_str = newString(0)
+  newSeq(U, 0)
+  newSeq(V, 0)
+
+  aligned_seq_count = 0;
+  seq_count = n_seq
+  newSeq(tags_list, seq_count)
+
+  j = 1
+  while j < seq_count:
+    let arange = input_aranges[j];
+    const
+      INDEL_ALLOWENCE_1 = 0.1
+    if arange.e1 - arange.s1 < 100 or arange.e2 - arange.s2 < 100 or
+        abs((arange.e1 - arange.s1) - (arange.e2 - arange.s2)) >
+        (int)(0.5 * INDEL_ALLOWENCE_1 *
+        float(arange.e1 - arange.s1 + arange.e2 - arange.s2)):
+      inc(j)
+      continue
+    const
+      INDEL_ALLOWENCE_2 = 150
+    DW_banded.align1((addr input_seq[j.int][0]) + arange.s1, arange.e1 - arange.s1,
+              (addr input_seq[0][0]) + arange.s2, arange.e2 - arange.s2, INDEL_ALLOWENCE_2, true,
+              d_path, aln_path, aln, U, V)
+    # Find the first non-indel aligned base and offset the coordinates.
+    var
+      q_start: seq_coor_t = arange.s1
+      t_start: seq_coor_t = arange.s2
+      aln_clip_offset = 0
+    while aln_clip_offset < aln.aln_str_size:
+      let
+        t = aln.t_aln_str[aln_clip_offset]
+        q = aln.q_aln_str[aln_clip_offset]
+      inc(aln_clip_offset)
+      if t != '-' and q != '-':
+        break
+      if q != '-':
+        inc(q_start)
+      if t != '-':
+        inc(t_start)
+    if (aln.aln_str_size > 500) and ((cdouble(aln.dist) / cdouble(aln.aln_str_size)) < max_diff):
+      tags_list[aligned_seq_count] = get_align_tags(aln.q_aln_str, aln.t_aln_str,
+          aln.aln_str_size, arange.s1, arange.s2, j.uint32, 0.seq_coor_t)
+      inc(aligned_seq_count)
+    #free_alignment(aln)
+    inc(j)
+  if aligned_seq_count > 0:
+    consensus = get_cns_from_align_tags(tags_list, aligned_seq_count,
+                                      len(input_seq[0]).seq_coor_t, min_cov)
+  else:
+    ## # allocate an empty consensus sequence
+    new(consensus)
+    #newSeq(consensus.sequence, 1)
+    consensus.sequence = newString(1)
+    newSeq(consensus.eqv, 1)
+  ## #free(consensus);
+  j = 0
+  while j < aligned_seq_count:
+    free_align_tags(tags_list[j])
+    inc(j)
+  #free(tags_list)
+  return consensus[]
+
 proc generate_utg_consensus*(input_seq: cStringArray; in_offset: seq[seq_coor_t];
                             n_seq: int; min_cov: int; K: int; min_idt: cdouble): consensus_data =
   var offset: seq[seq_coor_t] = in_offset

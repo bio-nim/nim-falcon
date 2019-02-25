@@ -59,6 +59,7 @@ type
     min_idt: float32
     edge_tolerance: int
     trim_size: int
+    allow_external_mapping: bool
     min_cov_aln: int
     max_cov_aln: int
 iterator get_seq_data(config: Config, min_n_read, min_len_aln: int): auto =
@@ -76,10 +77,10 @@ iterator get_seq_data(config: Config, min_n_read, min_len_aln: int): auto =
   #const fn = "/Users/cdunn2001/repo/gh/nim-consensus/c/t/foo.long"
   #var inp = open(fn)
   for fullline in inp.lines:
-    var line = fullline.strip.split()
-    if len(line) != 2: continue
-    var read_id = line[0]
-    var sequ = line[1]
+    var split_line = fullline.strip.split()
+    if len(split_line) != 2: continue
+    var read_id = split_line[0]
+    var sequ = split_line[1]
     if len(sequ) > max_len:
         sequ = sequ[0 .. max_len-1]
     case read_id
@@ -272,7 +273,7 @@ proc waitForOpenThreadIndex(threads: var seq[ref Thread[ConsensusArgs]]): int =
     os.sleep(100)
 proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10, max_n_read=500,
           trim=false, output_full=false, output_multi=false,
-          min_idt="0.70", edge_tolerance=1000, trim_size=50,
+          min_idt="0.70", edge_tolerance=1000, trim_size=50, allow_external_mapping=false,
           n_core=24): int =
   doAssert(output_multi, "--output-multi is required for now.")
   doAssert(not trim, "--trim is required for now.")
@@ -289,6 +290,7 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
     min_idt: float32(strutils.parseFloat(min_idt)),
     edge_tolerance: edge_tolerance,
     trim_size: trim_size,
+    allow_external_mapping: allow_external_mapping,
     min_cov_aln: min_cov_aln,
     max_cov_aln: max_cov_aln)
   #log("config=", config)
@@ -333,6 +335,7 @@ when isMainModule:
     "edge_tolerance": "for trimming, the there is unaligned edge leng > edge_tolerance, ignore the read",
     "trim": "trim the input sequence with k-mer spare dynamic programming to find the mapped range",
     "trim_size": "the size for triming both ends from initial sparse aligned region",
+    "allow_external_mapping": "if provided, externally determined mapping coordinates will be used for error correction",
     "output_multi": "output multiple correct regions",
     "output_full": "output uncorrected regions too",
     "min_n_read": "1 + minimum number of reads used in generating the consensus; a seed read with fewer alignments will be completely ignored",

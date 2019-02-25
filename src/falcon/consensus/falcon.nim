@@ -54,6 +54,7 @@
 ## # #################################################################################$$
 ## # 
 
+import std/strformat
 import common
 import kmer_lookup_c
 import DW_banded
@@ -121,7 +122,8 @@ common.usePtr[char]
 
 
 proc get_align_tags*(aln_q_seq: cstring; aln_t_seq: cstring; aln_seq_len: seq_coor_t;
-                    srange: ref aln_range; q_id: uint32; t_offset: seq_coor_t): ref align_tags_t =
+                    q_start, t_start: seq_coor_t;
+                    q_id: uint32; t_offset: seq_coor_t): ref align_tags_t =
   var p_q_base: char
   var tags: ref align_tags_t
   var
@@ -133,8 +135,8 @@ proc get_align_tags*(aln_q_seq: cstring; aln_t_seq: cstring; aln_seq_len: seq_co
     p_jj: seq_coor_t
   new(tags)
   newSeq(tags[], aln_seq_len)
-  i = srange.s1 - 1
-  j = srange.s2 - 1
+  i = q_start - 1
+  j = t_start - 1
   jj = 0
   p_j = - 1
   p_jj = 0
@@ -158,6 +160,10 @@ proc get_align_tags*(aln_q_seq: cstring; aln_t_seq: cstring; aln_seq_len: seq_co
       p_j = j
       p_jj = jj
       p_q_base = aln_q_seq[k]
+    else:
+      # If this happens, that's fine. We simply break on large insertions,
+      # and the tag array will be ended below the loop at this k.
+      break; # when there is a big alignment gap > UINT8_MAX, stop extending the tagging string
     inc(k)
   ## # sentinal at the end no longer needed
   return tags
@@ -277,7 +283,8 @@ proc update_col*(col: ptr align_tag_col_t; p_t_pos: seq_coor_t; p_delta: uint8;
         col.size = col.size * 2
       else:
         inc(col.size, 256)
-      assert(col.size < uint16(UINT16_MAX - 1))
+      let col_size_max: uint16 = uint16(UINT16_MAX-1)
+      assert(col.size < col_size_max, &"[update_col] {col.size} >= {col_size_max}")
       realloc_aln_col(col)
     #log("repr(col)=", repr(col))
     kk = col.n_link.int16
@@ -354,7 +361,7 @@ proc get_cns_from_align_tags*(tag_seqs: var seq[ref align_tags_t]; n_tag_seqs: s
 
   block:
     # Ensure msa_array exists.
-    assert(t_len < 100000)
+    assert(t_len < 100000, &"[get_cns_from_align_tags] {t_len} >= 100000")
     if msa_array == nil:
       msa_array = get_msa_working_sapce(100000)
   defer:
@@ -391,6 +398,10 @@ proc get_cns_from_align_tags*(tag_seqs: var seq[ref align_tags_t]; n_tag_seqs: s
         base = 4
       else:
         base = 255
+        stderr.writeLine(&"WARNING: Bad input detected! c_tag->q_base = '{c_tag.q_base}' (int value = {int(c_tag.q_base)}).")
+        stderr.writeLine(&"[get_cns_from_align_tags]:   before update_col: j = {j} / {tag_seqs[i][].len}, i = {i}")
+        stderr.writeLine(&"t_pos = {t_pos}, delta = {delta}, base = {base}, c_tag->q_base = {c_tag.q_base}, c_tag->p_t_pos = {c_tag.p_t_pos}, c_tag->p_delta = {c_tag.p_delta}, c_tag->p_q_base = {c_tag.p_q_base}")
+        break
       ## # Note: On bad input, base may be -1.
       #log("tpos:", $tpos, " len(arr):", $len(msa_array[]))
       #log("delta:", $delta, " len(arr.delta]):", $msa_array[t_pos].delta.len)
@@ -638,7 +649,7 @@ proc generate_consensus*(input_seq: cStringArray; n_seq: int; min_cov: int;
               d_path, aln_path, aln, U, V)
     if (aln.aln_str_size > 500) and ((cdouble(aln.dist) / cdouble(aln.aln_str_size)) < max_diff):
       tags_list[aligned_seq_count] = get_align_tags(aln.q_aln_str, aln.t_aln_str,
-          aln.aln_str_size, arange, j.uint32, 0.seq_coor_t)
+          aln.aln_str_size, arange.s1, arange.s2, j.uint32, 0.seq_coor_t)
       inc(aligned_seq_count)
     #free_alignment(aln)
     inc(j)
@@ -693,7 +704,7 @@ proc generate_utg_consensus*(input_seq: cStringArray; in_offset: seq[seq_coor_t]
   arange.s2 = 0
   arange.e2 = len(input_seq[0]).seq_coor_t
   tags_list[aligned_seq_count.int] = get_align_tags(input_seq[0], input_seq[0],
-      len(input_seq[0]).seq_coor_t, arange, 0, 0)
+      len(input_seq[0]).seq_coor_t, arange.s1, arange.s2, 0, 0)
   inc(aligned_seq_count, 1)
   j = 1
   while j < seq_count:
@@ -729,7 +740,7 @@ proc generate_utg_consensus*(input_seq: cStringArray; in_offset: seq[seq_coor_t]
     if aln.aln_str_size > 500 and
         cdouble(aln.dist) / cdouble(aln.aln_str_size) < max_diff:
       tags_list[aligned_seq_count] = get_align_tags(aln.q_aln_str, aln.t_aln_str,
-          aln.aln_str_size, arange, j.uint32, offset[j])
+          aln.aln_str_size, arange.s1, arange.s2, j.uint32, offset[j])
       inc(aligned_seq_count)
     #free_alignment(aln)
     inc(j)

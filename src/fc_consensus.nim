@@ -150,10 +150,39 @@ proc get_consensus_without_trim(args: ConsensusArgs): ConsensusResult =
     var cseqs: cStringArray
     let n_seq: cuint = cuint(len(seqs))
     copy_seq_ptrs(cseqs, seqs)
-    #foo.poo()
-    log("About to generate_consensus ", $len(seqs), " ", $n_seq)
     #echo cseqs
-    var consensus_data_ptr = common.generate_consensus(cseqs, n_seq, cuint(config.min_cov), cuint(config.K), cdouble(config.min_idt))
+
+    var all_seqs_mapped = false
+
+    if config.allow_external_mapping:
+      all_seqs_mapped = true
+      for seq in seqs:
+      if not seq.is_mapped:
+        all_seqs_mapped = false
+        break
+
+    if not all_seqs_mapped:
+      #foo.poo()
+      log("Internally mapping the sequences.")
+      log("About to generate_consensus ", $len(seqs), " ", $n_seq)
+      consensus_data_ptr = common.generate_consensus(
+          cseqs,
+          n_seq, cuint(config.min_cov), cuint(config.K), cdouble(config.min_idt))
+    else:
+      log("Using external mapping coordinates from input.")
+      var aln_ranges = newSeq[aln_range](len(seqs))
+      for i in [0 ..< len(seqs)]:
+        let seq = seqs[i]
+        aln_ranges[i] = aln_range(
+            s1: seq.qstart, e1: seq.qend,
+            s2: seq.tstart, e2: seq.tend,
+            score: (seq.qend - seq.qstart))
+      log("About to generate_consensus ", $len(seqs), " ", $n_seq)
+      consensus_data_ptr = common.generate_consensus_from_mapping(
+          cseqs,
+          aln_ranges,
+          n_seq, cuint(config.min_cov), cuint(config.K), cdouble(config.min_idt))
+
     deallocCStringArray(cseqs)
     var consensus = $consensus_data_ptr.sequence # expect a copy
     #eff_cov = consensus_data_ptr.eff_cov[:len(consensus)]

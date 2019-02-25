@@ -577,6 +577,7 @@ proc generate_consensus*(input_seq: cStringArray; n_seq: int; min_cov: int;
   ## #char * consensus;
   var consensus: ref consensus_data
   var max_diff: cdouble
+  let lk_ptr_size: seq_coor_t = seq_coor_t(1 shl (K * 2))
   max_diff = 1.0 - min_idt
   seq_count = n_seq
   ## #for (j=0; j < seq_count; j++) {
@@ -588,13 +589,13 @@ proc generate_consensus*(input_seq: cStringArray; n_seq: int; min_cov: int;
   #  echo "seq_len:", ii, " ", len(input_seq[ii])
   #  inc(ii)
   newSeq(tags_list, seq_count)
-  var lk_ptr = kmer_lookup_c.allocate_kmer_lookup(seq_coor_t(1 shl (K * 2)))
+  var lk_ptr = kmer_lookup_c.allocate_kmer_lookup(lk_ptr_size)
   #log("len(lk_ptr):", $(1 shl (K * 2)), "==", $len(lk_ptr))
   sa_ptr = allocate_seq(len(input_seq[0]).seq_coor_t)
   sda_ptr = allocate_seq_addr(len(input_seq[0]).seq_coor_t)
   # TODO(CD): That was 0s for .c, but not 0s here. Where should we init?
   add_sequence(0.seq_coor_t, K.cuint, input_seq[0], len(input_seq[0]).seq_coor_t, sda_ptr, sa_ptr, lk_ptr)
-  ## #mask_k_mer(1 << (K * 2), lk_ptr, 16);
+  mask_k_mer(lk_ptr, 10000);
   aligned_seq_count = 0
 
   var d_path: seq[d_path_data2]

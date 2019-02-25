@@ -168,9 +168,10 @@ proc add_sequence*(start: seq_coor_t; K: cuint; cseq: cstring; seq_len: seq_coor
     kmer_bv = kmer_bv and kmer_mask
     inc(i)
 
-proc mask_k_mer*(size: seq_coor_t; kl: ptr kmer_lookup; threshold: seq_coor_t) =
+proc mask_k_mer*(kl: var seq[kmer_lookup]; threshold: seq_coor_t) =
   var i: seq_coor_t
   i = 0
+  let size = kl.len
   while i < size:
     if kl[i].count > threshold:
       kl[i].start = INT_MAX

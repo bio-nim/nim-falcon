@@ -56,7 +56,11 @@
 ## #
 ## #
 
-{.passC: "-Wall -I./falcon/consensus".}
+from os import DirSep
+from strutils import rsplit
+const thisdir = system.currentSourcePath.rsplit(DirSep, 1)[0]
+{.passC: "-I" & thisdir.}
+{.passC: "-Wall".}
 #{.passC: "-g -Wall -I. -fno-omit-frame-pointer -fno-strict-aliasing -DNDEBUG".} // from pip install -v
 {.compile: "data_sorter.c".}
 

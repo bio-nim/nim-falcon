@@ -358,7 +358,7 @@ proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10
   result = 0
 
 when isMainModule:
-  import "cligen/cligen"
+  import "cligen"
   cligen.dispatch(main, short={}, help={
     "min_idt": "minimum identity of the alignments used for correction (32-bit float)",
     "edge_tolerance": "for trimming, the there is unaligned edge leng > edge_tolerance, ignore the read",

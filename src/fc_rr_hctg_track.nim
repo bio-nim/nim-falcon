@@ -38,6 +38,6 @@ proc rr_hctg_track1(
 
 
 when isMainModule:
-  import "cligen/cligen"
+  import "cligen"
   # cligen supports --foo-bar and --foo_bar styles automatically.
   dispatch(rr_hctg_track1)

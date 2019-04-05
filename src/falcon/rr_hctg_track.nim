@@ -1,8 +1,8 @@
 # vim: sw=2 ts=2 sts=2 tw=80 et:
 # Nim re-write of FALCON_unzip/falcon_unzip/rr_hctg_track.py
-import ../msgpack4nim/msgpack4nim
-import ../msgpack4nim/msgpack4collection
-from ../nim-heap/binaryheap import nil
+import msgpack4nim
+import msgpack4collection
+from binaryheap import nil
 from sys import log
 
 from algorithm import nil

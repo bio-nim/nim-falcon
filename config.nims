@@ -1,3 +1,4 @@
+#--parallelBuild:0
 echo "thisDir:", thisDir()
 #
 --debuginfo

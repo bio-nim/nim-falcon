@@ -30,8 +30,8 @@
 #	url = https://github.com/bio-nim/nim-DAZZ_DB
 #	ignore = dirty
 #	branch = master
-#[submodule "repos/hts-nim"]
-#	path = repos/hts-nim
-#	url = https://github.com/bio-nim/hts-nim
-#	ignore = dirty
-#	branch = master
+[submodule "repos/hts-nim"]
+	path = repos/hts-nim
+	url = https://github.com/bio-nim/hts-nim
+	ignore = dirty
+	branch = master

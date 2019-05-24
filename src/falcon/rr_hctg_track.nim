@@ -10,7 +10,6 @@ from hashes import nil
 from json import nil
 import json
 from os import nil
-from ospaths import nil
 from osproc import nil
 #from "pure/osproc.nim" import nil
 from parsecsv import nil
@@ -34,12 +33,12 @@ type
   mytable = tables.Table[string, seq[mytuple]]
   myprioritytable = tables.Table[string, binaryheap.Heap[mytuple]]
 
-proc toseq(src: str9): seq[int] =
-  var dst = newSeq[int](9)
-  assert len(dst) == 9
-  for i in 0..<9:
-    dst[i] = src[i].int
-  return dst
+#proc toseq(src: str9): seq[int] =
+#  var dst = newSeq[int](9)
+#  assert len(dst) == 9
+#  for i in 0..<9:
+#    dst[i] = src[i].int
+#  return dst
 proc fromstring(src: string): str9 =
   # dst must be same length as src
   assert len(src) == 9
@@ -58,8 +57,8 @@ proc tostring(src: str9, dst: var string) =
   for i in 0..<9:
     dst[i] = src[i]
 
-proc hash(x: str9): hashes.Hash =
-  return hashes.hash(tostring(x))
+#proc hash(x: str9): hashes.Hash =
+#  return hashes.hash(tostring(x))
 
 proc unpack_type*(ss: msgpack4nim.MsgStream, x: var str9) =
   var str: string
@@ -73,10 +72,10 @@ proc pack_type*(ss: msgpack4nim.MsgStream, x: str9) =
 proc pack_type*(ss: msgpack4nim.MsgStream, x: binaryheap.Heap[mytuple]) =
   let xseq: seq[mytuple] = sequtils.toSeq(binaryheap.items(x)) # unsorted
   msgpack4nim.pack(ss, xseq)
-proc `$`(x: str9): string =
-  return tostring(x)
-proc `$`(x: mytuple): string =
-  return "[$#, $#]" % [$x.score, $x.rid]
+#proc `$`(x: str9): string =
+#  return tostring(x)
+#proc `$`(x: mytuple): string =
+#  return "[$#, $#]" % [$x.score, $x.rid]
 #[
 proc `$`(x: Table): string =
   var ss = streams.newStringStream()
@@ -98,25 +97,25 @@ proc `$`(x: Table): string =
   ss.setPosition(0)
   return ss.readAll()
 ]#
-proc `$`(x: binaryheap.Heap[mytuple]): string =
-  var ss = streams.newStringStream()
-  ss.write("len=" & $binaryheap.size(x))
-  ss.write("[")
-  var first = true
-  for v in binaryheap.items(x):
-    if first:
-      first = false
-    else:
-      ss.write(", ")
-    ss.write("'")
-    ss.write($v)
-    ss.write("'")
-  ss.write("]")
-  ss.setPosition(0)
-  return ss.readAll()
+#proc `$`(x: binaryheap.Heap[mytuple]): string =
+#  var ss = streams.newStringStream()
+#  ss.write("len=" & $binaryheap.size(x))
+#  ss.write("[")
+#  var first = true
+#  for v in binaryheap.items(x):
+#    if first:
+#      first = false
+#    else:
+#      ss.write(", ")
+#    ss.write("'")
+#    ss.write($v)
+#    ss.write("'")
+#  ss.write("]")
+#  ss.setPosition(0)
+#  return ss.readAll()
 
 
-proc mytuple_cmp(x, y: mytuple): int =
+proc mytuple_cmp(x, y: mytuple): int = #{.gcsafe.} =
   if x.score < y.score: return -1
   if x.score > y.score: return 1
   for i in 0..<9:
@@ -135,11 +134,11 @@ proc get_fns_from_json*(json_fn: string): seq[string] =
   log("Reading JSON from '", json_fn, "'")
   let jcontent = system.readFile(json_fn)
   result = to(json.parseJson(jcontent), seq[string]) # json.to()
-  let fofn_dir = ospaths.parentDir(json_fn) # "" is ok
+  let fofn_dir = os.parentDir(json_fn) # "" is ok
   for i in 0 ..< result.len:
     let fn = result[i]
-    if not ospaths.isAbsolute(fn):
-      result[i] = ospaths.joinPath(fofn_dir, fn)
+    if not os.isAbsolute(fn):
+      result[i] = os.joinPath(fofn_dir, fn)
 
 proc fillTuple[T: tuple, V](input: openarray[V]): T =
   #assert input.len == len(result.fields)
@@ -164,7 +163,7 @@ proc stream_get_rid_to_ctg_slow(infile: streams.Stream): auto =
     #  rid_to_ctg[t.rid] = newSeq[string]()
     #rid_to_ctg[t.rid].add(t.ctg)
     if not rid_to_ctg.contains(t.rid):
-      rid_to_ctg[t.rid] = sets.initSet[string](2)
+      rid_to_ctg[t.rid] = sets.initHashSet[string](2)
     rid_to_ctg[t.rid].incl(t.ctg)
   return rid_to_ctg
 
@@ -187,7 +186,7 @@ proc stream_get_rid_to_ctg(ss: streams.Stream, fn="rid_to_ctg"): auto =
     let ctg = csv.row[3]
     #log("rid=", rid, ", ctg=", ctg)
     if not rid_to_ctg.contains(rid):
-      rid_to_ctg[rid] = sets.initSet[string](2)
+      rid_to_ctg[rid] = sets.initHashSet[string](2)
 
     var global_logged_rid_to_ctg {.global.} = false
     if (not global_logged_rid_to_ctg) and (ctg in rid_to_ctg[rid]):
@@ -197,14 +196,14 @@ proc stream_get_rid_to_ctg(ss: streams.Stream, fn="rid_to_ctg"): auto =
     rid_to_ctg[rid].incl(ctg)
   return rid_to_ctg
 
-proc get_rid_to_ctg_slow(fn: string): auto =
-  log("In get_rid_to_ctg_slow(): len=", sys.filelength(fn), " for file '", fn, "'")
-  let
-    ss = streams.newFileStream(fn)
-  assert(not ss.isNil())
-  defer:
-    streams.close(ss)
-  return stream_get_rid_to_ctg_slow(ss)
+#proc get_rid_to_ctg_slow(fn: string): auto =
+#  log("In get_rid_to_ctg_slow(): len=", sys.filelength(fn), " for file '", fn, "'")
+#  let
+#    ss = streams.newFileStream(fn)
+#  assert(not ss.isNil())
+#  defer:
+#    streams.close(ss)
+#  return stream_get_rid_to_ctg_slow(ss)
 
 proc get_rid_to_ctg*(fn: string): auto =
   #let content = readFile(fn)
@@ -225,7 +224,7 @@ proc get_rid_to_ctg*(fn: string): auto =
 
 #min_len, bestn, rid_to_ctg, rid_to_phase
 type
-  Settings* = object {.requiresInit.}
+  Settings* {.requiresInit.} = object
     n_core*: int #48
     file_list*: seq[string]
     db_fn*: string #"?/raw_reads.db"
@@ -263,25 +262,25 @@ proc stream_get_oid_to_phase(ss: streams.Stream, fn: string): auto =
     oid_to_phase[oid] = p
   return oid_to_phase
 
-proc stream_get_oid_to_phase_slow(ss: streams.Stream, fn: string): auto =
-  let oid_to_phase = tables.newTable[string, Phase]()
-  log("In stream_get_oid_to_phase_slow()")
-
-  var line: TaintedString = ""
-  while streams.readLine(ss, line):
-    let row = line.splitWhitespace()
-    if len(row) == 0: continue
-    #let t: TRow = fillTuple[TRow, string](row)
-
-    #log("phased_reads_row:", $row)
-    let p: Phase = (
-      ctg_id: row[1],
-      blockn: strutils.parseInt(row[2]).int16,
-      phase: strutils.parseInt(row[3]).int16
-    )
-    let oid = row[6]
-    oid_to_phase[oid] = p
-  return oid_to_phase
+#proc stream_get_oid_to_phase_slow(ss: streams.Stream, fn: string): auto =
+#  let oid_to_phase = tables.newTable[string, Phase]()
+#  log("In stream_get_oid_to_phase_slow()")
+#
+#  var line: TaintedString = ""
+#  while streams.readLine(ss, line):
+#    let row = line.splitWhitespace()
+#    if len(row) == 0: continue
+#    #let t: TRow = fillTuple[TRow, string](row)
+#
+#    #log("phased_reads_row:", $row)
+#    let p: Phase = (
+#      ctg_id: row[1],
+#      blockn: strutils.parseInt(row[2]).int16,
+#      phase: strutils.parseInt(row[3]).int16
+#    )
+#    let oid = row[6]
+#    oid_to_phase[oid] = p
+#  return oid_to_phase
 
 proc stream_get_rid_to_phase(rawread_ids_fn: string,
     oid_to_phase: TableRef[string, Phase]): auto =
@@ -337,7 +336,7 @@ var global_rid_to_phase {.threadvar.}: ref seq[Phase]
 proc tr_stage1(la4falcon_stream: streams.Stream, fn: string, min_len, bestn: int): myprioritytable =
   # for each read in the b-read column inside the LAS files, we
   #keep top `bestn` hits with a priority queue through all overlaps
-  result = tables.initTable[string, binaryheap.Heap[mytuple]](1024)
+  var myresult = tables.initTable[string, binaryheap.Heap[mytuple]](1024)
 
   var
     csv: parsecsv.CsvParser
@@ -350,9 +349,10 @@ proc tr_stage1(la4falcon_stream: streams.Stream, fn: string, min_len, bestn: int
         q_id = csv.row[0]
         t_id = csv.row[1]
         overlap_len = -strutils.parseInt(csv.row[2])
-        idt = strutils.parseFloat(csv.row[3])
-        (q_s, q_e, q_l) = (strutils.parseInt(csv.row[5]), strutils.parseInt(csv.row[6]), strutils.parseInt(csv.row[7]))
-        (t_s, t_e, t_l) = (strutils.parseInt(csv.row[9]), strutils.parseInt(csv.row[10]), strutils.parseInt(csv.row[11]))
+        #idt = strutils.parseFloat(csv.row[3])
+        #(q_s, q_e, q_l) = (strutils.parseInt(csv.row[5]), strutils.parseInt(csv.row[6]), strutils.parseInt(csv.row[7]))
+        #(t_s, t_e, t_l) = (strutils.parseInt(csv.row[9]), strutils.parseInt(csv.row[10]), strutils.parseInt(csv.row[11]))
+        t_l = strutils.parseInt(csv.row[11])
     if t_l < min_len:
         continue
     if q_id notin global_rid_to_ctg:
@@ -373,23 +373,24 @@ proc tr_stage1(la4falcon_stream: streams.Stream, fn: string, min_len, bestn: int
                 if (q_phase.ctg_id == t_phase.ctg_id and q_phase.blockn == t_phase.blockn and
                     q_phase.phase != t_phase.phase):
                   continue
-    if t_id notin result:
-      result[t_id] = binaryheap.newHeap[mytuple](mytuple_cmp)
+    if t_id notin myresult:
+      myresult[t_id] = binaryheap.newHeap[mytuple](mytuple_cmp)
     let it: mytuple = (score: overlap_len, rid: fromstring(q_id))
     #log("  rid:", $fromstring(q_id))
     #log("  it:", $it)
-    if binaryheap.size(result[t_id]) < bestn:
-      binaryheap.push(result[t_id], it)
-      #log("  heap:", $result[t_id])
+    if binaryheap.size(myresult[t_id]) < bestn:
+      binaryheap.push(myresult[t_id], it)
+      #log("  heap:", $myresult[t_id])
     else:
-      discard binaryheap.pushPop(result[t_id], it)
-      #log("  heap now:", $result[t_id])
+      discard binaryheap.pushPop(myresult[t_id], it)
+      #log("  heap now:", $myresult[t_id])
+  return myresult
 
-proc captureCmd(cmd: string): auto =
-  #log("$$($#)" % [cmd])
-  let options: set[osproc.ProcessOption] = {osproc.poUsePath, osproc.poEvalCommand, osproc.poEchoCmd}
-  result = osproc.execProcess(cmd, options=options)
-  log(" len(stdout)==", len(result))
+#proc captureCmd(cmd: string): auto =
+#  #log("$$($#)" % [cmd])
+#  let options: set[osproc.ProcessOption] = {osproc.poUsePath, osproc.poEvalCommand, osproc.poEchoCmd}
+#  result = osproc.execProcess(cmd, options=options)
+#  log(" len(stdout)==", len(result))
 
 proc run_tr_stage1(db_fn, fn: string, min_len, bestn: int): string =
   let cmd = "LA4Falcon -m $# $#" % [db_fn, fn]
@@ -530,8 +531,8 @@ proc run_stage2*(
     out_f.close()
 
   type ScoreCount = tuple[score: int, count: int]
-  proc `$`(val: ScoreCount): auto =
-    return "(" & $val[0] & ", " & $val[1] & ")"
+  #proc `$`(val: ScoreCount): auto =
+  #  return "(" & $val[0] & ", " & $val[1] & ")"
 
   log(" Writing ctg/scores for ", len(bread_to_areads), " breads.")
   var rid = newString(9) # same length as str9
@@ -603,12 +604,12 @@ proc test() =
     assert $res["000000026"] == "@[000000F, 000000C]", $res["000000026"]
     assert $res["000000287"] == "@[000000F_02]", $res["000000287"]
   echo "Success."
-  block:
-    let fn = "/lustre/hpcprod/cdunn/jira/se-809/run/4-quiver/read_maps/read_to_contig_map"
-    #let res = get_rid_to_ctg(fn)
+  #block:
+  #  let fn = "/lustre/hpcprod/cdunn/jira/se-809/run/4-quiver/read_maps/read_to_contig_map"
+  #  let res = get_rid_to_ctg(fn)
 
-proc main() =
-  test()
+#proc main() =
+#  test()
 
 if isMainModule:
   test()

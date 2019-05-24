@@ -1,7 +1,7 @@
 nimcache/
 /nimbleDir/
 /bin/
-/falcon/example
-/fc_consensus
-/fc_rr_hctg_track
-/fc_rr_hctg_track2
+fc_consensus
+fc_rr_hctg_track
+fc_rr_hctg_track2
+pb

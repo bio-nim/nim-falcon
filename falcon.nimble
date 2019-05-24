@@ -10,7 +10,7 @@ license       = "BSD 3 Clear"
 requires "nim >= 0.19.6", "daligner", "binaryheap", "cligen", "htslib", "msgpack4nim"
 
 srcDir = "./src"
-bin = @["falcon/example", "fc_rr_hctg_track2", "fc_rr_hctg_track", "fc_consensus"]
+bin = @["fc_rr_hctg_track2", "fc_rr_hctg_track", "fc_consensus", "pb"]
 
 #task test, "Test daligner wrapper":
 #    withDir("tests"):

@@ -239,7 +239,7 @@ proc write_seq(cns_seq: string, seed_id: string, seq_i: var int): bool =
             echo format_seq(cns_seq, 80)
             seq_i += 1
             return true
-proc process_consensus(cargs: ConsensusArgs) {.thread} =
+proc process_consensus(cargs: ConsensusArgs) {.thread.} =
     #discard GC_disable
     discard """
     if thread_msa_array == nil:
@@ -300,7 +300,7 @@ proc waitForOpenThreadIndex(threads: var seq[ref Thread[ConsensusArgs]]): int =
       if not running(threads[i][]):
         return i
     os.sleep(100)
-proc main(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10, max_n_read=500,
+proc main*(min_cov=6, min_cov_aln=10, max_cov_aln=0, min_len_aln=0, min_n_read=10, max_n_read=500,
           trim=false, output_full=false, output_multi=false,
           min_idt="0.70", edge_tolerance=1000, trim_size=50, allow_external_mapping=false,
           n_core=24): int =

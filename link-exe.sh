@@ -9,7 +9,7 @@ fi
 set -vex
 mkdir -p $bin
 
-ln -f ${NIMBLE_DIR}/bin/example $bin/fc_example.exe
+#ln -f ${NIMBLE_DIR}/bin/pb $bin/pb.exe
 ln -f ${NIMBLE_DIR}/bin/fc_consensus $bin/fc_consensus.exe
 ln -f ${NIMBLE_DIR}/bin/fc_rr_hctg_track $bin/fc_rr_hctg_track.exe
 ln -f ${NIMBLE_DIR}/bin/fc_rr_hctg_track2 $bin/fc_rr_hctg_track2.exe

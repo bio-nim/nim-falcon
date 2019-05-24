@@ -3,7 +3,7 @@
 from falcon/sys import log
 from falcon/rr_hctg_track import nil
 
-proc rr_hctg_track1(
+proc rr_hctg_track1*(
     test=false,
     phased_read_file="./3-unzip/all_phased_reads",
     read_to_contig_map="./4-quiver/read_maps/read_to_contig_map",

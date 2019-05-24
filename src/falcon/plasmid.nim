@@ -2,5 +2,8 @@
 import daligner/db
 import daligner/LA4Falcon
 
-if isMainModule:
+proc main*() =
   echo "HI"
+
+if isMainModule:
+    main()

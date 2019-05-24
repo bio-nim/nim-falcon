@@ -5,9 +5,9 @@ export NIMBLE_DIR
 NIMBLE_INSTALL=nimble install --debug -y
 
 default:
-	$N/bin/example
+	$N/bin/pb -h
 	./link-exe.sh bin/ # from ${NIMBLE_DIR}
-	./bin/example.exe
+	#./bin/example.exe
 	rm -rf bin/
 all:
 	${MAKE} update

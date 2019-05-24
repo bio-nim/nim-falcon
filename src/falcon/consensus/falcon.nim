@@ -62,7 +62,7 @@ import DW_banded
 const
   UINT8_MAX = 255
   UINT16_MAX = uint16.high.int32
-  UINT_MAX = uint32.high
+  #UINT_MAX = uint32.high
 
   MSA_BASE_GROUP_LEN = 5
 
@@ -313,8 +313,8 @@ proc clean_msa_working_space*(msa_array: ref msa_pos_t; max_t_len: int) =
   # max_t_len was uint
   var
     i: int #uint
-    j: int #uint
-    k: int #uint
+    #j: int #uint
+    #k: int #uint
   i = 0
   while i < max_t_len:
     realloc_delta_group(addr msa_array[][i], 0)

@@ -62,9 +62,9 @@ common.usePtr[common.base]
 common.usePtr[common.seq_addr]
 
 const
-  UINT8_MAX = 255
-  UINT16_MAX = uint16.high.int32
-  UINT_MAX = uint32.high
+  #UINT8_MAX = 255
+  #UINT16_MAX = uint16.high.int32
+  #UINT_MAX = uint32.high
   INT_MAX = int32.high
   LONG_MIN = clong.low
 

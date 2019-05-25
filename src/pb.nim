@@ -1,5 +1,5 @@
 # vim: sw=2 ts=2 sts=2 tw=0 et:
-from fc_consensus import nil
+#from fc_consensus import nil
 from fc_rr_hctg_track import nil
 from falcon/rr_hctg_track import nil
 from falcon/plasmid import nil
@@ -9,6 +9,10 @@ proc dataset(extras: seq[string]) =
 
 when isMainModule:
   import cligen
+  dispatch(
+        dataset, help = {},
+  )
+#[
   dispatchMulti(
         [dataset, help = {}],
         [plasmid.main, cmdName="plasmid"],
@@ -34,3 +38,4 @@ when isMainModule:
     "min-len-aln": "minimum length of a sequence in an alignment to be used in consensus; any shorter sequence will be completely ignored",
         }],
     )
+]#

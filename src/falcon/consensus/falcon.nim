@@ -109,6 +109,7 @@ type
 
   msa_pos_t* = seq[msa_delta_group_t]
 
+
 common.usePtr[align_tag_t]
 common.usePtr[align_tags_t]
 common.usePtr[align_tag_col_t]

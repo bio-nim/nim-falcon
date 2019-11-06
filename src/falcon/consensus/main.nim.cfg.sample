@@ -1,9 +1,0 @@
-hint[XDeclaredButNotUsed]=off
-#--debugger:native
-#-d:nimPinToCpu
-#--gc:boehm
-#--profiler:on
-#--profiler:off
-#--stackTrace:on
-#-d:memProfiler
-#-d:ignoreAllocationSize

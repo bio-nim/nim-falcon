@@ -2,6 +2,10 @@
 
 ## Release notes
 
+#### 1.2.0
+* Several new sub-commands
+* Needed for new pbipa package
+
 #### 1.1.0
 * New augmentation for filtering and polishing .
 

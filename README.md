@@ -11,3 +11,7 @@
 
 #### 1.0.1
 * `m4filt-contained`
+
+#### 1.5.0
+* `ipa-shard-ovl-asym`
+* Bug-fix from previous release (for "---" footer).

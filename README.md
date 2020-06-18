@@ -15,3 +15,6 @@
 #### 1.5.0
 * `ipa-shard-ovl-asym`
 * Bug-fix from previous release (for "---" footer).
+
+#### 1.5.1
+* Bug-fix (when nshards > nblocks)

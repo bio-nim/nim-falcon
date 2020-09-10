@@ -2,6 +2,13 @@
 
 ## Release notes
 
+#### 1.10.1
+* Support parallel purge_dups
+* Support config_purge_map_opt setting
+
+#### 1.8.0
+* paf-filter
+
 #### 1.7.0
 * (We meant to switch to htslib-1.10 in this version,
    but we are not yet ready for that.)
